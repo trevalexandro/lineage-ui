@@ -1,5 +1,5 @@
-import logo from './logo.svg';
-import './App.css';
+import logo from './../logo.svg';
+import './../css/pages/App.css';
 
 function App() {
   return (
@@ -11,11 +11,11 @@ function App() {
         </p>
         <a
           className="App-link"
-          href="https://reactjs.org"
+          href={`${process.env.REACT_APP_OAUTH_URL}?client_id=${process.env.REACT_APP_CLIENT_ID}&scope=repo`}
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn React
+          Login to GitHub
         </a>
       </header>
     </div>
