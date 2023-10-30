@@ -1,6 +1,6 @@
 import {useLoaderData, useNavigate} from 'react-router-dom';
 import { getRepos, searchRepos } from '../services/github-service';
-import { Text, Center, Stack } from '@mantine/core';
+import { Text, Stack } from '@mantine/core';
 import Search from '../components/search';
 import { useState } from 'react';
 import Repo from '../components/repo';
@@ -33,9 +33,7 @@ const Repos = () => {
         setCurrentRepos(newRepos);
     };
 
-    const getRepoComponents = () => {
-        return currentRepos.map(repo => <Repo key={repo.id} repoData={repo} />);
-    };
+    const getRepoComponents = () => currentRepos.map(repo => <Repo key={repo.id} repoData={repo} />);
 
     checkResult(currentRepos);
 

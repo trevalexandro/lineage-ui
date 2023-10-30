@@ -56,9 +56,8 @@ export const getFile = async (owner, repoName, filePath) => {
 
 const checkHttpStatus = async (res) => {
     if (res.status !== HTTP_OK_RESPONSE_STATUS_CODE) {
-        return {
-            ...res.status
-        };
+        const {status} = res;
+        return {status};
     }
 
     const data = await res.json();
