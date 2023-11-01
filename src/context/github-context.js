@@ -16,7 +16,7 @@ const reducer = (_dependencies, action) => {
 };
 
 export const GitHubContextProvider = ({children}) => {
-    const [dependencies, dispatch] = useReducer(reducer, []);
+    const [dependencies, dispatch] = useReducer(reducer, {});
 
     return (
         <GitHubContext.Provider value={dependencies}>
@@ -27,5 +27,5 @@ export const GitHubContextProvider = ({children}) => {
     );
 };
 
-export const useDependencies = () => useContext(GitHubContext);
+export const useGitHubState = () => useContext(GitHubContext);
 export const useGitHubDispatch = () => useContext(GitHubDispatchContext);

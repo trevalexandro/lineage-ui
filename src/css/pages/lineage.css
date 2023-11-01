@@ -1,0 +1,33 @@
+.rd3t-label { 
+    translate: -100px 33px !important; 
+    font-size: 13px;
+}
+
+.rd3t-label__title {
+    fill: white !important;
+}
+
+#root {
+    width: 100%;
+    height: 80%;
+}
+
+.node__root > circle {
+    fill: #1971c2;
+  }
+  
+.node__branch > circle {
+    fill: #1971c2;
+}
+
+.node__leaf > circle {
+    fill: #1971c2;
+}
+
+.link {
+    stroke: white !important;
+}
+
+.mantine-Center-root {
+    height: inherit !important;
+}

@@ -1,7 +1,7 @@
 import { Container, Divider, Space, Button, Text, Tooltip } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { getFile } from "../services/github-service";
-import { GITHUB_CONTEXT_REFRESH_ACTION_NAME, HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE } from "../const";
+import { GITHUB_CONTEXT_REFRESH_ACTION_NAME, HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, LINEAGE_YAML_FILE_NAME } from "../const";
 import { useNavigate } from "react-router";
 import { useGitHubDispatch } from "../context/github-context";
 import { IconAlertTriangle } from "@tabler/icons-react";
@@ -18,7 +18,7 @@ const Repo = ({repoData}) => {
                 return;
             }
             const repoDetails = repoData.full_name.split('/');
-            const dependencies = await getFile(repoDetails[0], repoDetails[1], 'lineage.yaml');
+            const dependencies = await getFile(repoDetails[0], repoDetails[1], LINEAGE_YAML_FILE_NAME);
             if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
                 navigate('/');
             }
@@ -31,7 +31,9 @@ const Repo = ({repoData}) => {
                     type: GITHUB_CONTEXT_REFRESH_ACTION_NAME,
                     dependencies
                 });
-                navigate('/lineage');
+                navigate(`/lineage/${repoDetails[0]}/${repoDetails[1]}`, {
+                    state: dependencies
+                });
             }
         }
         asyncEffect();
@@ -41,6 +43,15 @@ const Repo = ({repoData}) => {
         if (!isLoading) {
             setIsLoading(true);
         }
+    };
+
+    const getDefaultButton = () => {
+        return (
+            <Button variant="subtle" loading={isLoading} onClick={onClick}>
+                <Text size='xl'>{repoData.name}</Text>
+                <Space h='md' />
+            </Button>
+        );
     };
 
     if (showNotFoundMessage) {
@@ -57,13 +68,21 @@ const Repo = ({repoData}) => {
         );
     }
 
+    if (repoData.description && repoData.description !== '') {
+        return (
+            <Container>
+                <Divider />
+                <Tooltip label={repoData.description}>
+                    {getDefaultButton()}
+                </Tooltip>
+            </Container>
+        );
+    }
+
     return (
         <Container>
             <Divider />
-            <Button variant="subtle" loading={isLoading} onClick={onClick}>
-                <Text size='xl'>{repoData.name}</Text>
-                <Space h='md' />
-            </Button>
+            {getDefaultButton()}
         </Container>
     );
 };
