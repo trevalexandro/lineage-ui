@@ -15,7 +15,7 @@ const CustomPagination = ({pageNumber, onClick, totalCount = undefined, pageCoun
             <Button disabled={pageNumber === 1} onClick={() => onClick(false)} leftSection={<IconArrowBadgeLeft />}>
                 Previous
             </Button>
-            <Button disabled={disableNextButton} onClick={() => onClick(true)} rightSection={<IconArrowBadgeRight />}>
+            <Button disabled={disableNextButton()} onClick={() => onClick(true)} rightSection={<IconArrowBadgeRight />}>
                 Next
             </Button>
         </Group>

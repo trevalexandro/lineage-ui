@@ -21,6 +21,7 @@ const Lineage = () => {
     const [isLoading, setIsLoading] = useState(!state.dependencies && !location.state);
     const [pageNumber, setPageNumber] = useState(1);
     const [paginatedResults, setPaginatedResults] = useState([]);
+    const [showModalMenu, setShowModalMenu] = useState(false);
 
     const useEffectDependencies = [
         state, 
@@ -35,7 +36,9 @@ const Lineage = () => {
         pageNumber, 
         setPageNumber,
         paginatedResults,
-        setPaginatedResults
+        setPaginatedResults,
+        showModalMenu,
+        setShowModalMenu
     ];
     
     useEffect(() => {
@@ -81,6 +84,15 @@ const Lineage = () => {
         setPaginatedResults(newNodes);
     };
 
+    const onNodeClick = (node) => {
+        // TODO: Define logic for showing modal.
+        if (node.data.attributes.healthEndpoint) {
+            setShowModalMenu(true);
+            return;
+        }
+        // TODO: Read new file
+    };
+
     if (isLoading) {
         return (
             <Center>
@@ -116,15 +128,15 @@ const Lineage = () => {
         return (
             <Stack gap='md'>
                 <LineageGraph dependencies={seed} repoName={params.repoName} />
-                <CustomPagination pageNumber={pageNumber} />
+                <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={seed.length} pageCount={NUM_NODES_PER_PAGE} />
             </Stack>
         );
     }
-    // TODO: Fix lineage graph not showing up.
+    
     return (
         <Stack gap='md'>
-            <LineageGraph dependencies={paginatedResults} repoName={params.repoName} />
-            <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} />
+            <LineageGraph dependencies={paginatedResults} repoName={params.repoName} onNodeClick={onNodeClick} showModalMenu={showModalMenu} />
+            <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={paginatedResults.length} pageCount={NUM_NODES_PER_PAGE} />
         </Stack>
     );
 };

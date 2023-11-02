@@ -9,7 +9,7 @@
 
 #root {
     width: 100%;
-    height: 80%;
+    height: 90%;
 }
 
 .node__root > circle {
@@ -29,5 +29,9 @@
 }
 
 .mantine-Center-root {
+    height: inherit !important;
+}
+
+.mantine-Stack-root {
     height: inherit !important;
 }
