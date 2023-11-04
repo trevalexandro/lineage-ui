@@ -28,9 +28,9 @@ export const getRepos = async (pageNumber, pageCount = 30) => {
   return await checkHttpStatus(res);
 };
 
-export const getFile = async (owner, repoName, filePath) => {
+export const getFile = async (repoFullName, filePath) => {
     const accessToken = getDecryptedToken();
-    const res = accessToken ? await fetch(`${process.env.REACT_APP_BFF_URL}/repos/${owner}/${repoName}/${filePath}`, {
+    const res = accessToken ? await fetch(`${process.env.REACT_APP_BFF_URL}/repos/${repoFullName}/${filePath}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${accessToken}`
@@ -53,6 +53,11 @@ export const getFile = async (owner, repoName, filePath) => {
 
     return await checkAuthorization(res);
 };*/
+
+export const isHealthy = async (healthCheckEndpoint) => {
+    const res = await fetch(healthCheckEndpoint);
+    return res.status === HTTP_OK_RESPONSE_STATUS_CODE;
+}
 
 const checkHttpStatus = async (res) => {
     if (res.status !== HTTP_OK_RESPONSE_STATUS_CODE) {

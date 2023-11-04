@@ -17,8 +17,7 @@ const Repo = ({repoData}) => {
             if (!isLoading) {
                 return;
             }
-            const repoDetails = repoData.full_name.split('/');
-            const dependencies = await getFile(repoDetails[0], repoDetails[1], LINEAGE_YAML_FILE_NAME);
+            const dependencies = await getFile(repoData.full_name, LINEAGE_YAML_FILE_NAME);
             if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
                 navigate('/');
             }
@@ -31,7 +30,7 @@ const Repo = ({repoData}) => {
                     type: GITHUB_CONTEXT_REFRESH_ACTION_NAME,
                     dependencies
                 });
-                navigate(`/lineage/${repoDetails[0]}/${repoDetails[1]}`, {
+                navigate(`/lineage/${repoData.full_name}`, {
                     state: dependencies
                 });
             }
@@ -47,7 +46,7 @@ const Repo = ({repoData}) => {
 
     const getDefaultButton = () => {
         return (
-            <Button variant="subtle" loading={isLoading} onClick={onClick}>
+            <Button variant="subtle" loading={isLoading} onClick={onClick} loaderProps={{type: 'bars'}}>
                 <Text size='xl'>{repoData.name}</Text>
                 <Space h='md' />
             </Button>

@@ -1,34 +1,44 @@
 import { useParams, useLocation, useNavigate } from "react-router";
 import { useGitHubDispatch, useGitHubState } from "../context/github-context";
 import LineageGraph from "../components/lineage-graph";
-import { Center, Loader, Text, Title, Stack } from "@mantine/core";
+import { Center, Loader, Text, Title, Stack, Modal, Button, useMantineTheme, Notification } from "@mantine/core";
 import '../css/pages/lineage.css';
 import { useEffect, useState } from "react";
-import { LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE } from "../const";
-import { getFile } from "../services/github-service";
+import { LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE, REPO_FULL_NAME_PREFIX } from "../const";
+import { getFile, isHealthy } from "../services/github-service";
 import { HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, GITHUB_CONTEXT_REFRESH_ACTION_NAME } from "../const";
 import CustomPagination, { getPaginatedResults } from "../components/custom-pagination";
+import { useDisclosure } from "@mantine/hooks";
+import { IconAlertTriangle, IconCheck } from "@tabler/icons-react";
 
 
 
 const Lineage = () => {
+    const theme = useMantineTheme();
     const state = useGitHubState();
     const params = useParams();
     const location = useLocation();
     const dispatch = useGitHubDispatch();
     const navigate = useNavigate();
+    const [opened, handlers] = useDisclosure();
     const [showNotFoundMessage, setShowNotFoundMessage] = useState(false);
     const [isLoading, setIsLoading] = useState(!state.dependencies && !location.state);
     const [pageNumber, setPageNumber] = useState(1);
     const [paginatedResults, setPaginatedResults] = useState([]);
-    const [showModalMenu, setShowModalMenu] = useState(false);
-
+    const [healthEndpoint, setHealthEndpoint] = useState(undefined);
+    const [gitHubRepositoryLink, setGitHubRepositoryLink] = useState(undefined);
+    const [nodeIsHealthy, setNodeIsHealthy] = useState(undefined);
+    const [healthEndpointLoading, setHealthEndpointLoading] = useState(false);
+    const [nodeName, setNodeName] = useState(undefined);
+    
     const useEffectDependencies = [
         state, 
         params, 
         location, 
         dispatch, 
-        navigate, 
+        navigate,
+        opened,
+        handlers, 
         showNotFoundMessage, 
         setShowNotFoundMessage, 
         isLoading, 
@@ -37,16 +47,32 @@ const Lineage = () => {
         setPageNumber,
         paginatedResults,
         setPaginatedResults,
-        showModalMenu,
-        setShowModalMenu
+        healthEndpoint,
+        setHealthEndpoint,
+        gitHubRepositoryLink,
+        setGitHubRepositoryLink,
+        nodeIsHealthy,
+        healthEndpointLoading,
+        setHealthEndpointLoading,
+        nodeName,
+        setNodeName
     ];
     
     useEffect(() => {
         const asyncEffect = async () => {
+            // new render
+            if (healthEndpoint && healthEndpointLoading) {
+                const result = await isHealthy(healthEndpoint);
+                setNodeIsHealthy(result);
+                return;
+            }
+
+            // state exists after the first render
             if (state.dependencies) {
                 return;
             }
 
+            // refresh after the first render
             if (location.state && !state.dependencies) {
                 const {dependencies} = location.state;
                 dispatch({
@@ -56,7 +82,8 @@ const Lineage = () => {
                 return;
             }
 
-            const dependencies = await getFile(params.owner, params.repoName, LINEAGE_YAML_FILE_NAME);
+            // accessing the site externally
+            const dependencies = await getFile(`${params.owner}/${params.repoName}`, LINEAGE_YAML_FILE_NAME);
             if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
                 navigate('/');
             }
@@ -84,19 +111,79 @@ const Lineage = () => {
         setPaginatedResults(newNodes);
     };
 
-    const onNodeClick = (node) => {
-        // TODO: Define logic for showing modal.
-        if (node.data.attributes.healthEndpoint) {
-            setShowModalMenu(true);
+    const onNodeClick = async (node) => {
+        if (node.data.attributes.githubRepositoryLink && !node.data.attributes.healthEndpoint) {
+            const repoFullName = node.data.attributes.githubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
+            navigate(`/lineage/${repoFullName}`);
             return;
         }
-        // TODO: Read new file
+
+        if (node.data.attributes.healthEndpoint) {
+            setGitHubRepositoryLink(node.data.attributes.githubRepositoryLink); // could be undefined
+            setHealthEndpoint(node.data.attributes.healthEndpoint);
+            setHealthEndpointLoading(node.data.attributes.healthEndpoint && !node.data.attributes.gitHubRepositoryLink);
+            handlers.open();
+        }
+        setNodeName(node.data.name);
+    };
+
+    const getHealthCheckButtonColor = () => {
+        if (nodeIsHealthy === undefined) {
+            return theme.primaryColor;
+        }
+
+        return nodeIsHealthy ? 'green' : 'red';
+    };
+
+    const getHealthCheckButtonText = () => {
+        if (nodeIsHealthy === undefined) {
+            return 'Check Health';
+        }
+
+        return nodeIsHealthy ? 'Healthy' : 'Not Healthy';
+    };
+
+    const getModal = () => {
+        <Modal opened={opened} onClose={handlers.close}>
+            <Stack gap='md'>
+                <Button variant="light" rightSection={getHealthCheckButtonIcon()} color={getHealthCheckButtonColor()} loading={healthEndpointLoading} loaderProps={{type: 'bars'}} onClick={onHealthCheckButtonClick}>
+                    {getHealthCheckButtonText()}
+                </Button>
+                {gitHubRepositoryLink &&
+                    <Button variant="light" onClick={onDependenciesButtonClick}>
+                        {`${nodeName} Dependencies`}
+                    </Button>
+                }
+            </Stack>
+        </Modal>
+    };
+
+    const getNotification = () => {
+        return !gitHubRepositoryLink && !healthEndpoint && nodeName && (
+            <Notification icon={<IconAlertTriangle />} color="red">
+                This dependency doesn't have a GitHub repository link or health endpoint defined!
+            </Notification>
+        );
+    };
+
+    const getHealthCheckButtonIcon = () => nodeIsHealthy !== undefined && nodeIsHealthy ? <IconCheck /> : <IconAlertTriangle />;
+
+    const onHealthCheckButtonClick = () => {
+        if (!healthEndpointLoading) {
+            setHealthEndpointLoading(true);
+        }
+    };
+
+    const onDependenciesButtonClick = () => {
+        const repoFullName = gitHubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
+        handlers.close();
+        navigate(`/lineage/${repoFullName}`);
     };
 
     if (isLoading) {
         return (
             <Center>
-                <Loader />
+                <Loader type="bars" />
             </Center>
         );
     }
@@ -126,18 +213,26 @@ const Lineage = () => {
         const dependencies = state.dependencies ?? location.state.dependencies;
         const seed = getPaginatedResults(pageNumber, NUM_NODES_PER_PAGE, dependencies);
         return (
-            <Stack gap='md'>
-                <LineageGraph dependencies={seed} repoName={params.repoName} />
-                <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={seed.length} pageCount={NUM_NODES_PER_PAGE} />
-            </Stack>
+            <>
+                {getNotification()}
+                {getModal()}
+                <Stack gap='md'>
+                    <LineageGraph dependencies={seed} repoName={params.repoName} onNodeClick={onNodeClick} />
+                    <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={seed.length} pageCount={NUM_NODES_PER_PAGE} />
+                </Stack>
+            </>
         );
     }
     
     return (
-        <Stack gap='md'>
-            <LineageGraph dependencies={paginatedResults} repoName={params.repoName} onNodeClick={onNodeClick} showModalMenu={showModalMenu} />
-            <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={paginatedResults.length} pageCount={NUM_NODES_PER_PAGE} />
-        </Stack>
+        <>
+            {getNotification()}
+            {getModal()}
+            <Stack gap='md'>
+                <LineageGraph dependencies={paginatedResults} repoName={params.repoName} onNodeClick={onNodeClick} />
+                <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={paginatedResults.length} pageCount={NUM_NODES_PER_PAGE} />
+            </Stack>
+        </>
     );
 };
 

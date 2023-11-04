@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import Tree from 'react-d3-tree';
 
-const LineageGraph = ({dependencies, repoName, onNodeClick, showModalMenu}) => {
+const LineageGraph = ({dependencies, repoName, onNodeClick}) => {
     const children = dependencies.map(val => {
         const {name} = val;
         const copy = structuredClone(val);
@@ -19,8 +18,7 @@ const LineageGraph = ({dependencies, repoName, onNodeClick, showModalMenu}) => {
 
     const x = window.innerWidth / 2;
     const y = window.innerHeight / 2;
-    // TODO: Can we disable a node without github repository link using CSS?
-    // TODO: Make node green if health check endpoint present & successful, make node red if health check endpoint present & fail (tooltip)
+
     return (
         <Tree 
             translate={{x, y}} 
