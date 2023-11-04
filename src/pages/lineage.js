@@ -112,6 +112,8 @@ const Lineage = () => {
     };
 
     const onNodeClick = async (node) => {
+        // TODO: Disable clicking root node using CSS?
+        // TODO: Fix modal not opening.
         if (node.data.attributes.githubRepositoryLink && !node.data.attributes.healthEndpoint) {
             const repoFullName = node.data.attributes.githubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
             navigate(`/lineage/${repoFullName}`);
