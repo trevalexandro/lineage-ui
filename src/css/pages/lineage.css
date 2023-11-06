@@ -12,6 +12,10 @@
     height: 90%;
 }
 
+.node__root {
+    pointer-events: none;
+}
+
 .node__root > circle {
     fill: #1971c2;
   }

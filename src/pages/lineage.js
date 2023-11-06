@@ -4,7 +4,7 @@ import LineageGraph from "../components/lineage-graph";
 import { Center, Loader, Text, Title, Stack, Modal, Button, useMantineTheme, Notification } from "@mantine/core";
 import '../css/pages/lineage.css';
 import { useEffect, useState } from "react";
-import { LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE, REPO_FULL_NAME_PREFIX } from "../const";
+import { LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE, REPO_FULL_NAME_PREFIX, WINDOW_OPEN_NEW_TAB_IDENTIFIER } from "../const";
 import { getFile, isHealthy } from "../services/github-service";
 import { HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, GITHUB_CONTEXT_REFRESH_ACTION_NAME } from "../const";
 import CustomPagination, { getPaginatedResults } from "../components/custom-pagination";
@@ -113,11 +113,12 @@ const Lineage = () => {
     };
 
     const onNodeClick = async (node) => {
-        // TODO: Disable clicking root node using CSS?
-        // TODO: Fix page not showing up after node is clicked.
+        // TODO: Fix required fields not throwing error
+        // TODO: Generic error page
+        // TODO: GitHub search
         if (node.data.attributes.githubRepositoryLink && !node.data.attributes.healthEndpoint) {
             const repoFullName = node.data.attributes.githubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
-            navigate(`/lineage/${repoFullName}`);
+            window.open(`/lineage/${repoFullName}`, WINDOW_OPEN_NEW_TAB_IDENTIFIER);
             return;
         }
 
@@ -188,11 +189,7 @@ const Lineage = () => {
     const onDependenciesButtonClick = () => {
         const repoFullName = gitHubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
         handlers.close();
-        setIsLoading(true);
-        dispatch({ type: GITHUB_CONTEXT_REFRESH_ACTION_NAME });
-        navigate(`/lineage/${repoFullName}`, {
-            state: {}
-        });
+        window.open(`/lineage/${repoFullName}`, WINDOW_OPEN_NEW_TAB_IDENTIFIER);
     };
 
     if (isLoading) {
@@ -214,7 +211,7 @@ const Lineage = () => {
                         I'm afraid the YAML configuration for this repo doesn't exist.
                     </Text>
                     <Text size="xl">
-                        That can happen when you follow a link to something that has since been deleted, or the link was incorrect to begin with.
+                        That can happen when you follow a link to something that has since been deleted, or the configuration never existed.
                     </Text>
                     <Text size="xl">
                         Sorry about that.
