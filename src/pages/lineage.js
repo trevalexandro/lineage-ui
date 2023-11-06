@@ -64,6 +64,7 @@ const Lineage = () => {
             if (healthEndpoint && healthEndpointLoading) {
                 const result = await isHealthy(healthEndpoint);
                 setNodeIsHealthy(result);
+                setHealthEndpointLoading(false);
                 return;
             }
 
@@ -82,7 +83,7 @@ const Lineage = () => {
                 return;
             }
 
-            // accessing the site externally
+            // accessing the site externally or traversing from parent graph
             const dependencies = await getFile(`${params.owner}/${params.repoName}`, LINEAGE_YAML_FILE_NAME);
             if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
                 navigate('/');
@@ -113,7 +114,7 @@ const Lineage = () => {
 
     const onNodeClick = async (node) => {
         // TODO: Disable clicking root node using CSS?
-        // TODO: Fix modal not opening.
+        // TODO: Fix page not showing up after node is clicked.
         if (node.data.attributes.githubRepositoryLink && !node.data.attributes.healthEndpoint) {
             const repoFullName = node.data.attributes.githubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
             navigate(`/lineage/${repoFullName}`);
@@ -123,7 +124,7 @@ const Lineage = () => {
         if (node.data.attributes.healthEndpoint) {
             setGitHubRepositoryLink(node.data.attributes.githubRepositoryLink); // could be undefined
             setHealthEndpoint(node.data.attributes.healthEndpoint);
-            setHealthEndpointLoading(node.data.attributes.healthEndpoint && !node.data.attributes.gitHubRepositoryLink);
+            setHealthEndpointLoading(node.data.attributes.healthEndpoint && !node.data.attributes.githubRepositoryLink);
             handlers.open();
         }
         setNodeName(node.data.name);
@@ -139,25 +140,27 @@ const Lineage = () => {
 
     const getHealthCheckButtonText = () => {
         if (nodeIsHealthy === undefined) {
-            return 'Check Health';
+            return 'Check health';
         }
 
-        return nodeIsHealthy ? 'Healthy' : 'Not Healthy';
+        return nodeIsHealthy ? 'Healthy' : 'Not healthy';
     };
 
     const getModal = () => {
-        <Modal opened={opened} onClose={handlers.close}>
-            <Stack gap='md'>
-                <Button variant="light" rightSection={getHealthCheckButtonIcon()} color={getHealthCheckButtonColor()} loading={healthEndpointLoading} loaderProps={{type: 'bars'}} onClick={onHealthCheckButtonClick}>
-                    {getHealthCheckButtonText()}
-                </Button>
-                {gitHubRepositoryLink &&
-                    <Button variant="light" onClick={onDependenciesButtonClick}>
-                        {`${nodeName} Dependencies`}
+        return (
+            <Modal opened={opened} onClose={handlers.close}>
+                <Stack gap='md'>
+                    <Button variant="light" rightSection={getHealthCheckButtonIcon()} color={getHealthCheckButtonColor()} loading={healthEndpointLoading} loaderProps={{type: 'bars'}} onClick={onHealthCheckButtonClick}>
+                        {getHealthCheckButtonText()}
                     </Button>
-                }
-            </Stack>
-        </Modal>
+                    {gitHubRepositoryLink &&
+                        <Button variant="light" onClick={onDependenciesButtonClick}>
+                            {`${nodeName} dependencies`}
+                        </Button>
+                    }
+                </Stack>
+            </Modal>
+        );
     };
 
     const getNotification = () => {
@@ -168,7 +171,13 @@ const Lineage = () => {
         );
     };
 
-    const getHealthCheckButtonIcon = () => nodeIsHealthy !== undefined && nodeIsHealthy ? <IconCheck /> : <IconAlertTriangle />;
+    const getHealthCheckButtonIcon = () => {
+        if (nodeIsHealthy === undefined) {
+            return;
+        }
+
+        return nodeIsHealthy ? <IconCheck /> : <IconAlertTriangle />;
+    }
 
     const onHealthCheckButtonClick = () => {
         if (!healthEndpointLoading) {
@@ -179,7 +188,11 @@ const Lineage = () => {
     const onDependenciesButtonClick = () => {
         const repoFullName = gitHubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
         handlers.close();
-        navigate(`/lineage/${repoFullName}`);
+        setIsLoading(true);
+        dispatch({ type: GITHUB_CONTEXT_REFRESH_ACTION_NAME });
+        navigate(`/lineage/${repoFullName}`, {
+            state: {}
+        });
     };
 
     if (isLoading) {
@@ -225,7 +238,7 @@ const Lineage = () => {
             </>
         );
     }
-    
+
     return (
         <>
             {getNotification()}

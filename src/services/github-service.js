@@ -55,8 +55,16 @@ export const getFile = async (repoFullName, filePath) => {
 };*/
 
 export const isHealthy = async (healthCheckEndpoint) => {
-    const res = await fetch(healthCheckEndpoint);
-    return res.status === HTTP_OK_RESPONSE_STATUS_CODE;
+    try {
+        let res = await fetch(healthCheckEndpoint);
+
+        if (res.status !== HTTP_OK_RESPONSE_STATUS_CODE) {
+            res = await fetch(healthCheckEndpoint);
+        }
+        return res.status === HTTP_OK_RESPONSE_STATUS_CODE;
+    } catch {
+        return false;
+    }
 }
 
 const checkHttpStatus = async (res) => {
