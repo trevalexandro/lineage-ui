@@ -14,15 +14,18 @@ import { authenticate, getRepos } from './services/github-service';
 import { ACCESS_TOKEN_SESSION_STORAGE_KEY_NAME, NUM_REPOS_PER_PAGE } from './const';
 import Lineage from './pages/lineage';
 import { GitHubContextProvider } from './context/github-context';
+import Error from './components/error';
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    errorElement: <Error />
   },
   {
     path: '/repos',
     element: <Repos />,
+    errorElement: <Error />,
     loader: async ({request}) => {
       const url = new URL(request.url);
       const code = url.searchParams.get("code");
@@ -36,7 +39,8 @@ const router = createBrowserRouter([
   },
   {
     path: '/lineage/:owner/:repoName',
-    element: <Lineage />
+    element: <Lineage />,
+    errorElement: <Error />
   }
 ]);
 

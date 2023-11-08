@@ -1,10 +1,10 @@
 import { useParams, useLocation, useNavigate } from "react-router";
 import { useGitHubDispatch, useGitHubState } from "../context/github-context";
 import LineageGraph from "../components/lineage-graph";
-import { Center, Loader, Text, Title, Stack, Modal, Button, useMantineTheme, Notification } from "@mantine/core";
+import { Center, Loader, Text, Title, Stack, Modal, Button, useMantineTheme, Notification, Anchor } from "@mantine/core";
 import '../css/pages/lineage.css';
 import { useEffect, useState } from "react";
-import { LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE, REPO_FULL_NAME_PREFIX, WINDOW_OPEN_NEW_TAB_IDENTIFIER } from "../const";
+import { HTTP_BAD_REQUEST_STATUS_CODE, LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE, REPO_FULL_NAME_PREFIX } from "../const";
 import { getFile, isHealthy } from "../services/github-service";
 import { HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, GITHUB_CONTEXT_REFRESH_ACTION_NAME } from "../const";
 import CustomPagination, { getPaginatedResults } from "../components/custom-pagination";
@@ -22,6 +22,7 @@ const Lineage = () => {
     const navigate = useNavigate();
     const [opened, handlers] = useDisclosure();
     const [showNotFoundMessage, setShowNotFoundMessage] = useState(false);
+    const [showBadRequestMessage, setShowBadRequestMessage] = useState(false);
     const [isLoading, setIsLoading] = useState(!state.dependencies && !location.state);
     const [pageNumber, setPageNumber] = useState(1);
     const [paginatedResults, setPaginatedResults] = useState([]);
@@ -30,6 +31,12 @@ const Lineage = () => {
     const [nodeIsHealthy, setNodeIsHealthy] = useState(undefined);
     const [healthEndpointLoading, setHealthEndpointLoading] = useState(false);
     const [nodeName, setNodeName] = useState(undefined);
+
+    const graphStyling = {
+        root: { 
+            height: 'inherit' 
+        } 
+    };
     
     const useEffectDependencies = [
         state, 
@@ -40,7 +47,9 @@ const Lineage = () => {
         opened,
         handlers, 
         showNotFoundMessage, 
-        setShowNotFoundMessage, 
+        setShowNotFoundMessage,
+        showBadRequestMessage,
+        setShowBadRequestMessage, 
         isLoading, 
         setIsLoading, 
         pageNumber, 
@@ -87,19 +96,27 @@ const Lineage = () => {
             const dependencies = await getFile(`${params.owner}/${params.repoName}`, LINEAGE_YAML_FILE_NAME);
             if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
                 navigate('/');
+                return;
             }
 
             if (dependencies.status && dependencies.status === HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
                 setShowNotFoundMessage(true);
                 setIsLoading(false);
-            } else {
-                dispatch({
-                    type: GITHUB_CONTEXT_REFRESH_ACTION_NAME,
-                    dependencies
-                });
-                window.history.replaceState(dependencies);
-                setIsLoading(false);
+                return;
             }
+
+            if (dependencies.status && dependencies.status === HTTP_BAD_REQUEST_STATUS_CODE) {
+                setShowBadRequestMessage(true);
+                setIsLoading(false);
+                return;
+            }
+
+            dispatch({
+                type: GITHUB_CONTEXT_REFRESH_ACTION_NAME,
+                dependencies
+            });
+            window.history.replaceState(dependencies);
+            setIsLoading(false);
         };
         asyncEffect();
     }, useEffectDependencies);
@@ -113,12 +130,13 @@ const Lineage = () => {
     };
 
     const onNodeClick = async (node) => {
-        // TODO: Fix required fields not throwing error
         // TODO: Generic error page
         // TODO: GitHub search
+        // TODO: Documentation
+        // TODO: Logo
         if (node.data.attributes.githubRepositoryLink && !node.data.attributes.healthEndpoint) {
             const repoFullName = node.data.attributes.githubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
-            window.open(`/lineage/${repoFullName}`, WINDOW_OPEN_NEW_TAB_IDENTIFIER);
+            window.open(`/lineage/${repoFullName}`, '_blank');
             return;
         }
 
@@ -189,13 +207,37 @@ const Lineage = () => {
     const onDependenciesButtonClick = () => {
         const repoFullName = gitHubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
         handlers.close();
-        window.open(`/lineage/${repoFullName}`, WINDOW_OPEN_NEW_TAB_IDENTIFIER);
+        window.open(`/lineage/${repoFullName}`, '_blank');
     };
 
     if (isLoading) {
         return (
             <Center>
                 <Loader type="bars" />
+            </Center>
+        );
+    }
+
+    if (showBadRequestMessage) {
+        return (
+            <Center>
+                <Stack align='center' gap='md'>
+                    <Title>
+                        400
+                    </Title>
+                    <Text size='xl'>
+                        I'm afraid the YAML configuration for this repo doesn't contain the right structure.
+                    </Text>
+                    <Text size='xl'>
+                        That can happen when the configuration is empty, or the "Dependencies" field is misspelled.
+                    </Text>
+                    <Text size='xl'>
+                        You can find more documentation on the structure with the link below.
+                    </Text>
+                    <Anchor href={process.env.REACT_APP_DOCUMENTATION_URL} target="_blank">
+                        Lineage GitHub
+                    </Anchor>
+                </Stack>
             </Center>
         );
     }
@@ -228,7 +270,7 @@ const Lineage = () => {
             <>
                 {getNotification()}
                 {getModal()}
-                <Stack gap='md'>
+                <Stack gap='md' styles={graphStyling}>
                     <LineageGraph dependencies={seed} repoName={params.repoName} onNodeClick={onNodeClick} />
                     <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={seed.length} pageCount={NUM_NODES_PER_PAGE} />
                 </Stack>
@@ -240,7 +282,7 @@ const Lineage = () => {
         <>
             {getNotification()}
             {getModal()}
-            <Stack gap='md'>
+            <Stack gap='md' styles={graphStyling}>
                 <LineageGraph dependencies={paginatedResults} repoName={params.repoName} onNodeClick={onNodeClick} />
                 <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={paginatedResults.length} pageCount={NUM_NODES_PER_PAGE} />
             </Stack>
