@@ -130,7 +130,6 @@ const Lineage = () => {
     };
 
     const onNodeClick = async (node) => {
-        // TODO: Generic error page
         // TODO: GitHub search
         // TODO: Documentation
         // TODO: Logo
