@@ -13,6 +13,9 @@ const Repos = () => {
     const navigate = useNavigate();
     const [currentRepos, setCurrentRepos] = useState(initialRepos);
     const [pageNumber, setPageNumber] = useState(1);
+    const [useMyRepos, setUseMyRepos] = useState(true);
+    const [searchTerm, setSearchTerm] = useState(undefined);
+    const [totalCount, setTotalCount] = useState(undefined);
 
     const checkResult = (repos) => {
         if (repos.status && repos.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
@@ -21,16 +24,25 @@ const Repos = () => {
     }
 
     const onSearchClick = async (searchTerm) => {
-        /*const searchResults = await searchRepos(1, searchTerm);
-        setCurrentRepos(async () => searchResults.items);*/
+        const searchResults = await searchRepos(1, searchTerm, NUM_REPOS_PER_PAGE);
+        setPageNumber(1);
+        setCurrentRepos(searchResults.items);
+        setSearchTerm(searchTerm);
+        setTotalCount(searchResults.total_count);
+        setUseMyRepos(false);
     };
 
     const onPaginationClick = async (nextPage) => {
         const newPageNumber = nextPage ? pageNumber + 1 : pageNumber - 1;
-        const newRepos = await getRepos(newPageNumber, NUM_REPOS_PER_PAGE);
-        
+        if (useMyRepos) {
+            const newRepos = await getRepos(newPageNumber, NUM_REPOS_PER_PAGE);
+            setCurrentRepos(newRepos);
+        } else {
+            const newRepos = await searchRepos(newPageNumber, searchTerm, NUM_REPOS_PER_PAGE);
+            setCurrentRepos(newRepos.items);
+            setTotalCount(newRepos.total_count);
+        }
         setPageNumber(newPageNumber);
-        setCurrentRepos(newRepos);
     };
 
     const getRepoComponents = () => currentRepos.map(repo => <Repo key={repo.id} repoData={repo} />);
@@ -40,7 +52,7 @@ const Repos = () => {
     if (currentRepos.length === 0) {
         return (
             <Stack gap='xl'>
-                <Search label='Search all of GitHub' placeholder='foobar in:name' onClick={onSearchClick} />
+                <Search label='Search all of GitHub' placeholder='foobar in:name' onSearchClick={onSearchClick} />
                 <Stack gap='md' align='center'>
                     <Text size='xl'>No repos found</Text>
                     <Text size='md'>- Make sure there's at least one repo that you're a user of OR</Text>
@@ -54,12 +66,12 @@ const Repos = () => {
 
     return (
         <Stack gap='xl'>
-            <Search label='Search all of GitHub' placeholder='foobar in:name' onClick={onSearchClick} />
+            <Search label='Search all of GitHub' placeholder='foobar in:name' onSearchClick={onSearchClick} />
             <Stack gap='md'>
                 <Stack gap='sm'>
                     {getRepoComponents()}
                 </Stack>
-                <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} />
+                <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={totalCount} />
             </Stack>
         </Stack>
     );

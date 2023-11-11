@@ -26,5 +26,5 @@ export default CustomPagination;
 
 export const getPaginatedResults = (pageNumber, pageCount, collection) => {
     const offset = pageCount * (pageNumber - 1);
-    return collection.slice(offset, (pageCount + offset - 1));
+    return collection.slice(offset, (pageCount + offset));
 };

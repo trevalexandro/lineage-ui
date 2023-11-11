@@ -40,19 +40,17 @@ export const getFile = async (repoFullName, filePath) => {
     return await checkHttpStatus(res);
 };
 
-/*export const searchRepos = async (pageNumber, searchTerm, pageCount = 30) => {
-    const accessToken = sessionStorage.getItem(ACCESS_TOKEN_SESSION_STORAGE_KEY_NAME);
+export const searchRepos = async (pageNumber, searchTerm, pageCount = 30) => {
+    const accessToken = getDecryptedToken();
     
-    const res = await fetch(`https://api.github.com/user/repos?page=${pageNumber}&q=${searchTerm}&per_page=${pageCount}`, {
+    const res = await fetch(`${process.env.REACT_APP_BFF_URL}/search?pageNumber=${pageNumber}&pageCount=${pageCount}&query=${searchTerm}`, {
         method: 'GET',
         headers: {
-            'Accept': 'application/vnd.github+json',
             'Authorization': `Bearer ${accessToken}`
         }
     });
-
-    return await checkAuthorization(res);
-};*/
+    return await checkHttpStatus(res);
+};
 
 export const isHealthy = async (healthCheckEndpoint) => {
     try {
@@ -72,7 +70,7 @@ const checkHttpStatus = async (res) => {
         const {status} = res;
         return {status};
     }
-
+    
     const data = await res.json();
     return data;
 };

@@ -9,7 +9,9 @@ import {
 } from 'react-router-dom';
 import Repos from './pages/repos';
 import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
 import { MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import { authenticate, getRepos } from './services/github-service';
 import { ACCESS_TOKEN_SESSION_STORAGE_KEY_NAME, NUM_REPOS_PER_PAGE } from './const';
 import Lineage from './pages/lineage';
@@ -48,6 +50,7 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <GitHubContextProvider>
     <MantineProvider defaultColorScheme='dark'>
+      <Notifications />
       <RouterProvider router={router} />
     </MantineProvider>  
   </GitHubContextProvider>

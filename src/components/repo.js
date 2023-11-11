@@ -13,6 +13,23 @@ const Repo = ({repoData}) => {
     const [errorMessage, setErrorMessage] = useState(undefined);
     const dispatch = useGitHubDispatch();
 
+    const loaderProps = {
+        type: 'bars'
+    };
+
+    const useEffectDependencies = [
+        isLoading, 
+        repoData, 
+        navigate, 
+        setShowErrorMessage, 
+        setIsLoading, 
+        dispatch, 
+        showErrorMessage, 
+        errorMessage, 
+        setErrorMessage, 
+        loaderProps
+    ];
+
     useEffect(() => {
         const asyncEffect = async () => {
             if (!isLoading) {
@@ -42,7 +59,7 @@ const Repo = ({repoData}) => {
             });
         }
         asyncEffect();
-    }, [isLoading, repoData, navigate, setShowErrorMessage, setIsLoading, dispatch, showErrorMessage, errorMessage, setErrorMessage]);
+    }, useEffectDependencies);
 
     const setErrorState = (errorMessage) => {
         setShowErrorMessage(true);
@@ -59,8 +76,8 @@ const Repo = ({repoData}) => {
 
     const getDefaultButton = () => {
         return (
-            <Button variant="subtle" loading={isLoading} onClick={onClick} loaderProps={{type: 'bars'}}>
-                <Text size='xl'>{repoData.name}</Text>
+            <Button variant="subtle" loading={isLoading} onClick={onClick} loaderProps={loaderProps}>
+                <Text size='xl'>{repoData.full_name}</Text>
                 <Space h='md' />
             </Button>
         );
@@ -72,7 +89,7 @@ const Repo = ({repoData}) => {
                 <Divider />
                 <Tooltip label={errorMessage}>
                     <Button variant="subtle" rightSection={<IconAlertTriangle />} onClick={(event) => event.preventDefault()} data-disabled>
-                        <Text size='xl'>{repoData.name}</Text>
+                        <Text size='xl'>{repoData.full_name}</Text>
                         <Space h='md' />
                     </Button>
                 </Tooltip>

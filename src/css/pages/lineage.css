@@ -1,6 +1,9 @@
 .rd3t-label { 
-    translate: -100px 33px !important; 
-    font-size: 13px;
+    translate: -100px 33px !important;
+}
+
+.rd3t-label__attributes {
+    font-size: 8px !important;
 }
 
 .rd3t-label__title {

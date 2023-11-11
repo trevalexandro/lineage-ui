@@ -17,7 +17,7 @@ const LineageGraph = ({dependencies, repoName, onNodeClick}) => {
     }
 
     const x = window.innerWidth / 2;
-    const y = window.innerHeight / 2;
+    const y = window.innerHeight / 3;
 
     return (
         <Tree 
@@ -29,6 +29,7 @@ const LineageGraph = ({dependencies, repoName, onNodeClick}) => {
             leafNodeClassName="node__leaf" 
             pathClassFunc={() => 'link'}
             onNodeClick={(node) => onNodeClick(node)}
+            orientation='vertical'
         />
     )
 };

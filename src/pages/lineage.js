@@ -10,6 +10,7 @@ import { HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_
 import CustomPagination, { getPaginatedResults } from "../components/custom-pagination";
 import { useDisclosure } from "@mantine/hooks";
 import { IconAlertTriangle, IconCheck } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
 
 
 
@@ -130,9 +131,17 @@ const Lineage = () => {
     };
 
     const onNodeClick = async (node) => {
-        // TODO: GitHub search
+        // TODO: Fix styling for lineage graph. Show only dependency type, but still persist through attributes? Tooltips in modal?
+        // TODO: home page
         // TODO: Documentation
         // TODO: Logo
+        if (!node.data.attributes.githubRepositoryLink && !node.data.attributes.healthEndpoint) {
+            notifications.show({
+                title: "Node notification",
+                message: "This dependency doesn't have a GitHub repository link or health endpoint defined!"
+            });
+        }
+
         if (node.data.attributes.githubRepositoryLink && !node.data.attributes.healthEndpoint) {
             const repoFullName = node.data.attributes.githubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
             window.open(`/lineage/${repoFullName}`, '_blank');
@@ -178,14 +187,6 @@ const Lineage = () => {
                     }
                 </Stack>
             </Modal>
-        );
-    };
-
-    const getNotification = () => {
-        return !gitHubRepositoryLink && !healthEndpoint && nodeName && (
-            <Notification icon={<IconAlertTriangle />} color="red">
-                This dependency doesn't have a GitHub repository link or health endpoint defined!
-            </Notification>
         );
     };
 
@@ -267,11 +268,10 @@ const Lineage = () => {
         const seed = getPaginatedResults(pageNumber, NUM_NODES_PER_PAGE, dependencies);
         return (
             <>
-                {getNotification()}
                 {getModal()}
                 <Stack gap='md' styles={graphStyling}>
                     <LineageGraph dependencies={seed} repoName={params.repoName} onNodeClick={onNodeClick} />
-                    <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={seed.length} pageCount={NUM_NODES_PER_PAGE} />
+                    <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={dependencies.length} pageCount={NUM_NODES_PER_PAGE} />
                 </Stack>
             </>
         );
@@ -279,11 +279,10 @@ const Lineage = () => {
 
     return (
         <>
-            {getNotification()}
             {getModal()}
             <Stack gap='md' styles={graphStyling}>
                 <LineageGraph dependencies={paginatedResults} repoName={params.repoName} onNodeClick={onNodeClick} />
-                <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={paginatedResults.length} pageCount={NUM_NODES_PER_PAGE} />
+                <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={state.dependencies.length} pageCount={NUM_NODES_PER_PAGE} />
             </Stack>
         </>
     );
