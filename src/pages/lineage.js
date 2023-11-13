@@ -1,7 +1,7 @@
 import { useParams, useLocation, useNavigate } from "react-router";
 import { useGitHubDispatch, useGitHubState } from "../context/github-context";
 import LineageGraph from "../components/lineage-graph";
-import { Center, Loader, Text, Title, Stack, Modal, Button, useMantineTheme, Notification, Anchor } from "@mantine/core";
+import { Center, Loader, Text, Title, Stack, Modal, Button, useMantineTheme, Tooltip, Anchor } from "@mantine/core";
 import '../css/pages/lineage.css';
 import { useEffect, useState } from "react";
 import { HTTP_BAD_REQUEST_STATUS_CODE, LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE, REPO_FULL_NAME_PREFIX } from "../const";
@@ -9,7 +9,7 @@ import { getFile, isHealthy } from "../services/github-service";
 import { HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, GITHUB_CONTEXT_REFRESH_ACTION_NAME } from "../const";
 import CustomPagination, { getPaginatedResults } from "../components/custom-pagination";
 import { useDisclosure } from "@mantine/hooks";
-import { IconAlertTriangle, IconCheck } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCheck, IconHeartbeat, IconSchema } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 
 
@@ -131,27 +131,27 @@ const Lineage = () => {
     };
 
     const onNodeClick = async (node) => {
-        // TODO: Fix styling for lineage graph. Show only dependency type, but still persist through attributes? Tooltips in modal?
         // TODO: home page
         // TODO: Documentation
         // TODO: Logo
-        if (!node.data.attributes.githubRepositoryLink && !node.data.attributes.healthEndpoint) {
+        // TODO: Analytics
+        if (!node.data.githubRepositoryLink && !node.data.healthEndpoint) {
             notifications.show({
                 title: "Node notification",
                 message: "This dependency doesn't have a GitHub repository link or health endpoint defined!"
             });
         }
 
-        if (node.data.attributes.githubRepositoryLink && !node.data.attributes.healthEndpoint) {
-            const repoFullName = node.data.attributes.githubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
+        if (node.data.githubRepositoryLink && !node.data.healthEndpoint) {
+            const repoFullName = node.data.githubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
             window.open(`/lineage/${repoFullName}`, '_blank');
             return;
         }
 
-        if (node.data.attributes.healthEndpoint) {
-            setGitHubRepositoryLink(node.data.attributes.githubRepositoryLink); // could be undefined
-            setHealthEndpoint(node.data.attributes.healthEndpoint);
-            setHealthEndpointLoading(node.data.attributes.healthEndpoint && !node.data.attributes.githubRepositoryLink);
+        if (node.data.healthEndpoint) {
+            setGitHubRepositoryLink(node.data.githubRepositoryLink); // could be undefined
+            setHealthEndpoint(node.data.healthEndpoint);
+            setHealthEndpointLoading(node.data.healthEndpoint && !node.data.githubRepositoryLink);
             handlers.open();
         }
         setNodeName(node.data.name);
@@ -177,13 +177,17 @@ const Lineage = () => {
         return (
             <Modal opened={opened} onClose={handlers.close}>
                 <Stack gap='md'>
-                    <Button variant="light" rightSection={getHealthCheckButtonIcon()} color={getHealthCheckButtonColor()} loading={healthEndpointLoading} loaderProps={{type: 'bars'}} onClick={onHealthCheckButtonClick}>
-                        {getHealthCheckButtonText()}
-                    </Button>
-                    {gitHubRepositoryLink &&
-                        <Button variant="light" onClick={onDependenciesButtonClick}>
-                            {`${nodeName} dependencies`}
+                    <Tooltip label={healthEndpoint}>
+                        <Button variant="light" rightSection={getHealthCheckButtonIcon()} color={getHealthCheckButtonColor()} loading={healthEndpointLoading} loaderProps={{type: 'bars'}} onClick={onHealthCheckButtonClick}>
+                            {getHealthCheckButtonText()}
                         </Button>
+                    </Tooltip>
+                    {gitHubRepositoryLink &&
+                        <Tooltip label={gitHubRepositoryLink}>
+                            <Button variant="light" onClick={onDependenciesButtonClick} rightSection={<IconSchema />}>
+                                {`${nodeName} dependencies`}
+                            </Button>
+                        </Tooltip>
                     }
                 </Stack>
             </Modal>
@@ -192,7 +196,7 @@ const Lineage = () => {
 
     const getHealthCheckButtonIcon = () => {
         if (nodeIsHealthy === undefined) {
-            return;
+            return <IconHeartbeat />;
         }
 
         return nodeIsHealthy ? <IconCheck /> : <IconAlertTriangle />;

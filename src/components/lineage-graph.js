@@ -2,12 +2,12 @@ import Tree from 'react-d3-tree';
 
 const LineageGraph = ({dependencies, repoName, onNodeClick}) => {
     const children = dependencies.map(val => {
-        const {name} = val;
-        const copy = structuredClone(val);
-        delete copy.name;
+        const {dependencyType} = val;
         return {
-            name,
-            attributes: copy
+            attributes: {
+                dependencyType
+            },
+            ...val
         };
     });
 
