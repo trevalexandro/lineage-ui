@@ -17,11 +17,13 @@ import { ACCESS_TOKEN_SESSION_STORAGE_KEY_NAME, NUM_REPOS_PER_PAGE } from './con
 import Lineage from './pages/lineage';
 import { GitHubContextProvider } from './context/github-context';
 import Error from './components/error';
+import SplashPage from './pages/splash';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: <SplashPage />,
+    //element: <App />,
     errorElement: <Error />
   },
   {
