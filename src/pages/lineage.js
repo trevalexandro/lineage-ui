@@ -9,7 +9,7 @@ import { getFile, isHealthy } from "../services/github-service";
 import { HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, GITHUB_CONTEXT_REFRESH_ACTION_NAME } from "../const";
 import CustomPagination, { getPaginatedResults } from "../components/custom-pagination";
 import { useDisclosure } from "@mantine/hooks";
-import { IconAlertTriangle, IconCheck, IconHeartbeat, IconSchema } from "@tabler/icons-react";
+import { IconAlertTriangle, IconBinaryTree2, IconCheck, IconHeartbeat } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 
 
@@ -184,7 +184,7 @@ const Lineage = () => {
                     </Tooltip>
                     {gitHubRepositoryLink &&
                         <Tooltip label={gitHubRepositoryLink}>
-                            <Button variant="light" onClick={onDependenciesButtonClick} rightSection={<IconSchema />}>
+                            <Button variant="light" onClick={onDependenciesButtonClick} rightSection={<IconBinaryTree2 />}>
                                 {`${nodeName} dependencies`}
                             </Button>
                         </Tooltip>
