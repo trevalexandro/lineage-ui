@@ -6,6 +6,7 @@ import { useState } from 'react';
 import Repo from '../components/repo';
 import CustomPagination from '../components/custom-pagination';
 import { HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, NUM_REPOS_PER_PAGE } from '../const';
+import HamburgerMenu from '../components/hamburger-menu';
 
 
 const Repos = () => {
@@ -65,15 +66,18 @@ const Repos = () => {
     }    
 
     return (
-        <Stack gap='xl'>
-            <Search label='Search all of GitHub' placeholder='foobar in:name' onSearchClick={onSearchClick} />
-            <Stack gap='md'>
-                <Stack gap='sm'>
-                    {getRepoComponents()}
+        <>
+            <HamburgerMenu />
+            <Stack gap='xl'>
+                <Search label='Search all of GitHub' placeholder='foobar in:name' onSearchClick={onSearchClick} />
+                <Stack gap='md'>
+                    <Stack gap='sm'>
+                        {getRepoComponents()}
+                    </Stack>
+                    <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={totalCount} />
                 </Stack>
-                <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={totalCount} />
             </Stack>
-        </Stack>
+        </>
     );
 };
 

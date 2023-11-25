@@ -11,6 +11,7 @@ import CustomPagination, { getPaginatedResults } from "../components/custom-pagi
 import { useDisclosure } from "@mantine/hooks";
 import { IconAlertTriangle, IconBinaryTree2, IconCheck, IconHeartbeat } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
+import HamburgerMenu from "../components/hamburger-menu";
 
 
 
@@ -131,7 +132,6 @@ const Lineage = () => {
     };
 
     const onNodeClick = async (node) => {
-        // TODO: home page
         // TODO: Documentation
         // TODO: Logo
         // TODO: Analytics
@@ -224,46 +224,52 @@ const Lineage = () => {
 
     if (showBadRequestMessage) {
         return (
-            <Center>
-                <Stack align='center' gap='md'>
-                    <Title>
-                        400
-                    </Title>
-                    <Text size='xl'>
-                        I'm afraid the YAML configuration for this repo doesn't contain the right structure.
-                    </Text>
-                    <Text size='xl'>
-                        That can happen when the configuration is empty, or the "Dependencies" field is misspelled.
-                    </Text>
-                    <Text size='xl'>
-                        You can find more documentation on the structure with the link below.
-                    </Text>
-                    <Anchor href={process.env.REACT_APP_DOCUMENTATION_URL} target="_blank">
-                        Lineage GitHub
-                    </Anchor>
-                </Stack>
-            </Center>
+            <>
+                <HamburgerMenu />
+                <Center>
+                    <Stack align='center' gap='md'>
+                        <Title>
+                            400
+                        </Title>
+                        <Text size='xl'>
+                            I'm afraid the YAML configuration for this repo doesn't contain the right structure.
+                        </Text>
+                        <Text size='xl'>
+                            That can happen when the configuration is empty, or the "Dependencies" field is misspelled.
+                        </Text>
+                        <Text size='xl'>
+                            You can find more documentation on the structure with the link below.
+                        </Text>
+                        <Anchor href={process.env.REACT_APP_DOCUMENTATION_URL} target="_blank">
+                            Lineage GitHub
+                        </Anchor>
+                    </Stack>
+                </Center>
+            </>
         );
     }
 
     if (showNotFoundMessage) {
         return (
-            <Center>
-                <Stack align="center" gap='md'>
-                    <Title>
-                        404
-                    </Title>
-                    <Text size="xl">
-                        I'm afraid the YAML configuration for this repo doesn't exist.
-                    </Text>
-                    <Text size="xl">
-                        That can happen when you follow a link to something that has since been deleted, or the configuration never existed.
-                    </Text>
-                    <Text size="xl">
-                        Sorry about that.
-                    </Text>
-                </Stack>
-            </Center>
+            <>
+                <HamburgerMenu />
+                <Center>
+                    <Stack align="center" gap='md'>
+                        <Title>
+                            404
+                        </Title>
+                        <Text size="xl">
+                            I'm afraid the YAML configuration for this repo doesn't exist.
+                        </Text>
+                        <Text size="xl">
+                            That can happen when you follow a link to something that has since been deleted, or the configuration never existed.
+                        </Text>
+                        <Text size="xl">
+                            Sorry about that.
+                        </Text>
+                    </Stack>
+                </Center>
+            </>
         );
     }
 
@@ -272,6 +278,7 @@ const Lineage = () => {
         const seed = getPaginatedResults(pageNumber, NUM_NODES_PER_PAGE, dependencies);
         return (
             <>
+                <HamburgerMenu />
                 {getModal()}
                 <Stack gap='md' styles={graphStyling}>
                     <LineageGraph dependencies={seed} repoName={params.repoName} onNodeClick={onNodeClick} />
@@ -283,6 +290,7 @@ const Lineage = () => {
 
     return (
         <>
+            <HamburgerMenu />
             {getModal()}
             <Stack gap='md' styles={graphStyling}>
                 <LineageGraph dependencies={paginatedResults} repoName={params.repoName} onNodeClick={onNodeClick} />

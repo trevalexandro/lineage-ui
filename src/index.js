@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './css/index.css';
-import App from './pages/App';
 import reportWebVitals from './reportWebVitals';
 import {
   createBrowserRouter,
@@ -23,7 +22,6 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <SplashPage />,
-    //element: <App />,
     errorElement: <Error />
   },
   {

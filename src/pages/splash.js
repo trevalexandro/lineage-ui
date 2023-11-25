@@ -2,16 +2,17 @@ import { Stack, Title, Text, AspectRatio, Overlay, Space, Button, Paper, ThemeIc
 import topSectionImage from '../images/DALL·E 2023-11-13 00.05.46 - connecting the dots and the colors are blue, white, and gray with a black background, digital art.png';
 import { useMediaQuery } from "@mantine/hooks";
 import { IconBinaryTree2, IconBrandGithubFilled, IconEye, IconHeartbeat } from "@tabler/icons-react";
+import HamburgerMenu from "../components/hamburger-menu";
 
 // dark hex #1a1b1e
 
 const TopSection = ({showLargeScreenOverlayImage, onButtonClick}) => {
-    // TODO: Burger menu?
     // TODO: Logo in the bottom section
     
     return (
         <AspectRatio ratio={showLargeScreenOverlayImage ? 4 / 3 : 3 / 4}>
-            <Stack style={{zIndex: 201}}>
+            <HamburgerMenu />
+            <Stack style={{zIndex: 196}}>
                 <Title style={{fontSize: 75, color: 'white'}}>
                     See it all at once
                 </Title>
@@ -23,7 +24,7 @@ const TopSection = ({showLargeScreenOverlayImage, onButtonClick}) => {
                 </Button>
             </Stack>
             <img src={topSectionImage} />
-            <Overlay fixed={true} gradient="linear-gradient(to right black, transparent)" opacity={0.99} />
+            <Overlay zIndex={195} fixed={true} gradient="linear-gradient(to right black, transparent)" opacity={0.99} />
         </AspectRatio>
     );
 };
@@ -88,6 +89,7 @@ const BottomSection = ({onButtonClick}) => {
             <Button onClick={onButtonClick} rightSection={<IconBrandGithubFilled />}>
                 Get started with GitHub
             </Button>
+            <Space h='xl' />
         </Stack>
     );
 };
