@@ -1,14 +1,30 @@
-import { Stack, Title, Text, AspectRatio, Overlay, Space, Button, Paper, ThemeIcon } from "@mantine/core";
+import { Stack, Title, Text, AspectRatio, Overlay, Space, Button, ThemeIcon, Center } from "@mantine/core";
 import topSectionImage from '../images/DALL·E 2023-11-13 00.05.46 - connecting the dots and the colors are blue, white, and gray with a black background, digital art.png';
+import logo from '../images/logo_large.png';
 import { useMediaQuery } from "@mantine/hooks";
-import { IconBinaryTree2, IconBrandGithubFilled, IconEye, IconHeartbeat } from "@tabler/icons-react";
+import { IconBinaryTree2, IconBooks, IconBrandGithubFilled, IconEye, IconHeartbeat } from "@tabler/icons-react";
 import HamburgerMenu from "../components/hamburger-menu";
 
 // dark hex #1a1b1e
 
-const TopSection = ({showLargeScreenOverlayImage, onButtonClick}) => {
-    // TODO: Logo in the bottom section
-    
+const getButtons = () => {
+    const onGitHubButtonClick = () => window.location = `${process.env.REACT_APP_OAUTH_URL}?client_id=${process.env.REACT_APP_CLIENT_ID}&scope=repo`;
+
+    const onDocsButtonClick = () => window.open(`${process.env.REACT_APP_DOCUMENTATION_URL}`, '_blank');
+
+    return (
+        <>
+            <Button onClick={onGitHubButtonClick} rightSection={<IconBrandGithubFilled />}>
+                Get started with GitHub
+            </Button>
+            <Button variant="default" onClick={onDocsButtonClick} rightSection={<IconBooks />}>
+                Get started with the docs
+            </Button>
+        </>
+    )
+};
+
+const TopSection = ({showLargeScreenOverlayImage}) => {
     return (
         <AspectRatio ratio={showLargeScreenOverlayImage ? 4 / 3 : 3 / 4}>
             <HamburgerMenu />
@@ -19,9 +35,7 @@ const TopSection = ({showLargeScreenOverlayImage, onButtonClick}) => {
                 <Text size='xl' style={{color: 'white'}}>
                     A holistic view of your dependencies and their health.
                 </Text>
-                <Button onClick={onButtonClick} rightSection={<IconBrandGithubFilled />}>
-                    Get started with GitHub
-                </Button>
+                {getButtons()}
             </Stack>
             <img src={topSectionImage} />
             <Overlay zIndex={195} fixed={true} gradient="linear-gradient(to right black, transparent)" opacity={0.99} />
@@ -83,14 +97,24 @@ const MidSection = ({minSizeMedium, showLargeMidSectionElements}) => {
     );
 }
 
-const BottomSection = ({onButtonClick}) => {
+const BottomSection = () => {
     return (
-        <Stack gap='lg' align="center">
-            <Button onClick={onButtonClick} rightSection={<IconBrandGithubFilled />}>
-                Get started with GitHub
-            </Button>
-            <Space h='xl' />
-        </Stack>
+        <>
+            <Stack gap='lg' align="center">
+                {getButtons()}
+                <Space h='xl' />
+                <Space h='xl' />
+            </Stack>
+            <Center>
+                <Stack>
+                    <AspectRatio>
+                        <img src={logo} />
+                    </AspectRatio>
+                    <Title style={{color: 'white'}}>Lineage</Title>
+                    <Space h='xl' />
+                </Stack>
+            </Center>
+        </>
     );
 };
 
@@ -98,17 +122,15 @@ const SplashPage = () => {
     const showLargeMidSectionElements = useMediaQuery('(min-width: 821px)');
     const minSizeMedium = useMediaQuery('(min-width: 767px');
 
-    const onButtonClick = () => window.location = `${process.env.REACT_APP_OAUTH_URL}?client_id=${process.env.REACT_APP_CLIENT_ID}&scope=repo`;
-
     return (
         <Stack>
-            <TopSection showLargeScreenOverlayImage={minSizeMedium} onButtonClick={onButtonClick} />
+            <TopSection showLargeScreenOverlayImage={minSizeMedium} />
             <Space h='xl' />
             <Space h='xl' />
             <MidSection minSizeMedium={minSizeMedium} showLargeMidSectionElements={showLargeMidSectionElements} />
             <Space h='xl' />
             <Space h='xl' />
-            <BottomSection onButtonClick={onButtonClick} />
+            <BottomSection />
         </Stack>
     );
 };

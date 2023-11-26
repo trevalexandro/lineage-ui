@@ -133,8 +133,6 @@ const Lineage = () => {
 
     const onNodeClick = async (node) => {
         // TODO: Documentation
-        // TODO: Logo
-        // TODO: Analytics
         if (!node.data.githubRepositoryLink && !node.data.healthEndpoint) {
             notifications.show({
                 title: "Node notification",
