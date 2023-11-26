@@ -1,5 +1,5 @@
 import { Stack, Title, Text, AspectRatio, Overlay, Space, Button, ThemeIcon, Center } from "@mantine/core";
-import topSectionImage from '../images/DALL·E 2023-11-13 00.05.46 - connecting the dots and the colors are blue, white, and gray with a black background, digital art.png';
+import topSectionImage from '../images/splash_image.png';
 import logo from '../images/logo_large.png';
 import { useMediaQuery } from "@mantine/hooks";
 import { IconBinaryTree2, IconBooks, IconBrandGithubFilled, IconEye, IconHeartbeat } from "@tabler/icons-react";
