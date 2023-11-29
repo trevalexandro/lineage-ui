@@ -1,6 +1,6 @@
 import { useDisclosure } from "@mantine/hooks";
 import { Burger, Drawer, NavLink } from "@mantine/core";
-import { IconBooks, IconBrandGithub, IconHome } from "@tabler/icons-react";
+import { IconBooks, IconBrandGithub, IconHome, IconMail } from "@tabler/icons-react";
 import { useLocation, useNavigate } from "react-router";
 import {ACCESS_TOKEN_SESSION_STORAGE_KEY_NAME} from '../const';
 import { useMediaQuery } from "@mantine/hooks";
@@ -36,6 +36,8 @@ const HamburgerMenu = () => {
         }
     };
 
+    const onContactClick = () => window.open(`${process.env.REACT_APP_CONTACT_URL}`, '_blank');
+
     const onDocsClick = () => window.open(`${process.env.REACT_APP_DOCUMENTATION_URL}`, '_blank');
 
     const onLoginClick = () => window.location = `${process.env.REACT_APP_OAUTH_URL}?client_id=${process.env.REACT_APP_CLIENT_ID}&scope=repo`;
@@ -46,6 +48,7 @@ const HamburgerMenu = () => {
                 {location.pathname !== '/' && <NavLink label="Home" leftSection={<IconHome />} active={homeNavigationActive} onClick={onHomeClick} />}
                 {location.pathname === '/' && <NavLink label='Login' leftSection={<IconBrandGithub />} onClick={onLoginClick} />}
                 <NavLink label='Docs' onClick={onDocsClick} leftSection={<IconBooks />} />
+                <NavLink label='Contact' onClick={onContactClick} leftSection ={<IconMail />} />
             </Drawer>
             <Burger onClick={open} aria-label="Toggle navigation" style={burgerMenuProps} />
         </>
