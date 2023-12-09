@@ -55,8 +55,7 @@ const Repo = ({repoData}) => {
         dispatch, 
         showErrorMessage, 
         errorMessage, 
-        setErrorMessage, 
-        loaderProps
+        setErrorMessage
     ]);
 
     const setErrorState = (errorMessage) => {
