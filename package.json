@@ -1,7 +1,7 @@
 {
+  "homepage": "https://trevalexandro.github.io/lineage-ui",
   "name": "lineage",
   "version": "0.1.0",
-  "homepage": "https://trevalexandro.github.io/lineage-ui",
   "private": true,
   "dependencies": {
     "@mantine/core": "^7.1.2",

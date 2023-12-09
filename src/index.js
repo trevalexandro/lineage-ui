@@ -20,12 +20,12 @@ import SplashPage from './pages/splash';
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: '/lineage-ui',
     element: <SplashPage />,
     errorElement: <Error />
   },
   {
-    path: '/repos',
+    path: '/lineage-ui/repos',
     element: <Repos />,
     errorElement: <Error />,
     loader: async ({request}) => {
@@ -40,7 +40,7 @@ const router = createBrowserRouter([
     }
   },
   {
-    path: '/lineage/:owner/:repoName',
+    path: '/lineage-ui/lineage/:owner/:repoName',
     element: <Lineage />,
     errorElement: <Error />
   }
