@@ -17,19 +17,6 @@ const Repo = ({repoData}) => {
         type: 'bars'
     };
 
-    const useEffectDependencies = [
-        isLoading, 
-        repoData, 
-        navigate, 
-        setShowErrorMessage, 
-        setIsLoading, 
-        dispatch, 
-        showErrorMessage, 
-        errorMessage, 
-        setErrorMessage, 
-        loaderProps
-    ];
-
     useEffect(() => {
         const asyncEffect = async () => {
             if (!isLoading) {
@@ -59,7 +46,18 @@ const Repo = ({repoData}) => {
             });
         }
         asyncEffect();
-    }, useEffectDependencies);
+    }, [
+        isLoading, 
+        repoData.full_name, 
+        navigate, 
+        setShowErrorMessage, 
+        setIsLoading, 
+        dispatch, 
+        showErrorMessage, 
+        errorMessage, 
+        setErrorMessage, 
+        loaderProps
+    ]);
 
     const setErrorState = (errorMessage) => {
         setShowErrorMessage(true);
