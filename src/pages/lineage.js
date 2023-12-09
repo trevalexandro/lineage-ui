@@ -40,35 +40,6 @@ const Lineage = () => {
         } 
     };
     
-    const useEffectDependencies = [
-        state, 
-        params, 
-        location, 
-        dispatch, 
-        navigate,
-        opened,
-        handlers, 
-        showNotFoundMessage, 
-        setShowNotFoundMessage,
-        showBadRequestMessage,
-        setShowBadRequestMessage, 
-        isLoading, 
-        setIsLoading, 
-        pageNumber, 
-        setPageNumber,
-        paginatedResults,
-        setPaginatedResults,
-        healthEndpoint,
-        setHealthEndpoint,
-        gitHubRepositoryLink,
-        setGitHubRepositoryLink,
-        nodeIsHealthy,
-        healthEndpointLoading,
-        setHealthEndpointLoading,
-        nodeName,
-        setNodeName
-    ];
-    
     useEffect(() => {
         const asyncEffect = async () => {
             // new render
@@ -121,7 +92,35 @@ const Lineage = () => {
             setIsLoading(false);
         };
         asyncEffect();
-    }, useEffectDependencies);
+    }, [
+        state.dependencies, 
+        params.owner,
+        params.repoName, 
+        location.state, 
+        dispatch, 
+        navigate,
+        opened,
+        handlers, 
+        showNotFoundMessage, 
+        setShowNotFoundMessage,
+        showBadRequestMessage,
+        setShowBadRequestMessage, 
+        isLoading, 
+        setIsLoading, 
+        pageNumber, 
+        setPageNumber,
+        paginatedResults,
+        setPaginatedResults,
+        healthEndpoint,
+        setHealthEndpoint,
+        gitHubRepositoryLink,
+        setGitHubRepositoryLink,
+        nodeIsHealthy,
+        healthEndpointLoading,
+        setHealthEndpointLoading,
+        nodeName,
+        setNodeName
+    ]);
 
     const onPaginationClick = (nextPage) => {
         const newPageNumber = nextPage ? pageNumber + 1 : pageNumber - 1;

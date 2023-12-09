@@ -37,7 +37,7 @@ const TopSection = ({showLargeScreenOverlayImage}) => {
                 </Text>
                 {getButtons()}
             </Stack>
-            <img src={topSectionImage} />
+            <img src={topSectionImage} alt='' />
             <Overlay zIndex={195} fixed={true} gradient="linear-gradient(to right black, transparent)" opacity={0.99} />
         </AspectRatio>
     );
@@ -108,7 +108,7 @@ const BottomSection = () => {
             <Center>
                 <Stack>
                     <AspectRatio>
-                        <img src={logo} />
+                        <img src={logo} alt='' />
                     </AspectRatio>
                     <Title style={{color: 'white'}}>Lineage</Title>
                     <Space h='xl' />
