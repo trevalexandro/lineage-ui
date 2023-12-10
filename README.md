@@ -1,10 +1,11 @@
-# Getting Started with Create React App
+# Lineage
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Lineage is a prototype web app built on top of GitHub's platform to easily identify a project's technical dependencies. It's open source, free, and currently in its infancy. As it gains more end users, the plan is to double down & add in more features to make this a powerful, robust application.
 
-## Available Scripts
+## Prerequisites
 
-In the project directory, you can run:
+- You must have a GitHub account with a repository ready to use Lineage
+- Your repository must have a `lineage.yaml` file at the root.
 
 ### `npm start`
 
