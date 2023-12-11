@@ -6,7 +6,8 @@
     "forwardingGateway": {
       "allowedForwardedHosts": [
         "thelineage.dev",
-        "www.thelineage.dev"
+        "www.thelineage.dev",
+        "test.thelineage.dev"
       ]
     }
 }
