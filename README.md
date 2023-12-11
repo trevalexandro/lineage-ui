@@ -4,16 +4,12 @@ Lineage is a prototype web app built on top of GitHub's platform to easily ident
 
 ## Prerequisites
 
-- You must have a GitHub account with a repository ready to use Lineage
+- You must have a GitHub account.
+- You must be owner or contributor for the repository you're looking to integrate with Lineage. If your repository is owned by an organization, you might have to contact your admin to give Lineage the proper access controls. Otherwise, the repository won't be visible.
 - Your repository must have a `lineage.yaml` file at the root.
 
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Quickstart
+At the root of your repository, create a `lineage.yaml` file. 
 
 ### `npm test`
 
