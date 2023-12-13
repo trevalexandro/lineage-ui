@@ -8,8 +8,18 @@ Lineage is a prototype web app built on top of GitHub's platform to easily ident
 - You must be owner or contributor for the repository you're looking to integrate with Lineage. If your repository is owned by an organization, you might have to contact your admin to give Lineage the proper access controls. Otherwise, the repository won't be visible.
 - Your repository must have a `lineage.yaml` file at the root.
 
-### Quickstart
-At the root of your repository, create a `lineage.yaml` file. 
+## Quickstart
+At the root of your repository, create a `lineage.yaml` file with the following content.
+```
+dependencies:
+  - name: tailwindcss
+    dependency_type: 'CSS framework'
+    github_repository_link: https://github.com/tailwindlabs/tailwindcss
+```
+Login to https://thelineage.dev & click on the repository you've added your configuration to. You should see a dependency node in the app now. The root node is named after your repository.
+
+![image](https://github.com/trevalexandro/lineage-ui/assets/17580038/b94900f9-f079-4e3b-951f-70ef763224c4)
+
 
 ### `npm test`
 
