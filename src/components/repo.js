@@ -1,7 +1,7 @@
 import { Container, Divider, Space, Button, Text, Tooltip } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { getFile } from "../services/github-service";
-import { GITHUB_CONTEXT_REFRESH_ACTION_NAME, HTTP_BAD_REQUEST_STATUS_CODE, HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, LINEAGE_YAML_FILE_NAME } from "../const";
+import { GITHUB_CONTEXT_REFRESH_ACTION_NAME, HTTP_BAD_REQUEST_STATUS_CODE, HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, LINEAGE_YAML_FILE_NAME, PACKAGE_JSON_FILE_NAME } from "../const";
 import { useNavigate } from "react-router";
 import { useGitHubDispatch } from "../context/github-context";
 import { IconAlertTriangle } from "@tabler/icons-react";
@@ -11,6 +11,7 @@ const Repo = ({repoData}) => {
     const [isLoading, setIsLoading] = useState(false);
     const [showErrorMessage, setShowErrorMessage] = useState(false);
     const [errorMessage, setErrorMessage] = useState(undefined);
+    const [bothFilesExist, setBothFilesExist] = useState(false);
     const dispatch = useGitHubDispatch();
 
     const loaderProps = {
@@ -22,27 +23,37 @@ const Repo = ({repoData}) => {
             if (!isLoading) {
                 return;
             }
-            const dependencies = await getFile(repoData.full_name, LINEAGE_YAML_FILE_NAME);
-            if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
+            const lineageYamlDependencies = await getFile(repoData.full_name, LINEAGE_YAML_FILE_NAME);
+            if (lineageYamlDependencies.status && lineageYamlDependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
                 navigate('/');
                 return;
             }
 
-            if (dependencies.status && dependencies.status === HTTP_BAD_REQUEST_STATUS_CODE) {
-                console.log('bad request');
+            if (lineageYamlDependencies.status && lineageYamlDependencies.status === HTTP_BAD_REQUEST_STATUS_CODE) {
                 return setErrorState("The lineage.yaml file for this repo doesn't have a \"Dependencies\" field!");
             }            
             
-            if (dependencies.status && dependencies.status === HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
-                return setErrorState("This repo doesn't have a lineage.yaml file!");
+            const packageJsonDependencies = await getFile(repoData.full_name, PACKAGE_JSON_FILE_NAME, !lineageYamlDependencies.status);
+            if (packageJsonDependencies.status && packageJsonDependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
+                navigate('/');
+                return;
             }
 
+            if (lineageYamlDependencies.status === HTTP_NOT_FOUND_RESPONSE_STATUS_CODE && packageJsonDependencies.status === HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
+                return setErrorState("This repo doesn't have a lineage.yaml or package.json file!");
+            }
+
+            if (!lineageYamlDependencies.status && !packageJsonDependencies.status) {
+                return setBothFilesExist(true);
+            }
+
+            const finalDependencies = lineageYamlDependencies.status ? packageJsonDependencies.packages : lineageYamlDependencies;
             dispatch({
                 type: GITHUB_CONTEXT_REFRESH_ACTION_NAME,
-                dependencies
+                dependencies: finalDependencies
             });
             navigate(`/lineage/${repoData.full_name}`, {
-                state: dependencies
+                state: finalDependencies
             });
         }
         asyncEffect();

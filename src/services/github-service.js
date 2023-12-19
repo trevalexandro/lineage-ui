@@ -28,9 +28,9 @@ export const getRepos = async (pageNumber, pageCount = 30) => {
   return await checkHttpStatus(res);
 };
 
-export const getFile = async (repoFullName, filePath) => {
+export const getFile = async (repoFullName, filePath, omitContent = false) => {
     const accessToken = getDecryptedToken();
-    const res = accessToken ? await fetch(`${process.env.REACT_APP_BFF_URL}/repos/${repoFullName}/${filePath}`, {
+    const res = accessToken ? await fetch(`${process.env.REACT_APP_BFF_URL}/repos/${repoFullName}/${filePath}&omitContent=${omitContent}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${accessToken}`

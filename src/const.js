@@ -3,6 +3,7 @@ export const NUM_REPOS_PER_PAGE = 10;
 export const NUM_NODES_PER_PAGE = 10;
 export const GITHUB_CONTEXT_REFRESH_ACTION_NAME = 'REFRESH';
 export const LINEAGE_YAML_FILE_NAME = 'lineage.yaml';
+export const PACKAGE_JSON_FILE_NAME = 'package.json';
 export const REPO_FULL_NAME_PREFIX = 'github.com/';
 
 export const HTTP_FORBIDDEN_RESPONSE_STATUS_CODE = 403;
