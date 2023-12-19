@@ -6,16 +6,22 @@ const LineageGraph = ({dependencies, repoName, onNodeClick}) => {
     const [nodeKey, setNodeKey] = useState(undefined);
 
     const children = dependencies.map((val, index) => {
-        const attributes = {};
-        if (hoveringOverNode && nodeKey === index) {
-            const {dependencyType} = val;
-            attributes.dependencyType = dependencyType;
-        }
-        return {
+        const returnObj = {
             key: index,
-            attributes,
+            attributes: {},
             ...val
         };
+
+        if (!hoveringOverNode || nodeKey !== index) {
+            return returnObj;
+        }
+
+        const {dependencyType} = val;
+        attributes.dependencyType = dependencyType;
+        if (val.version && val.version !== '') {
+            attributes.version = val.version;
+        }
+        return returnObj;
     });
 
     const data = {

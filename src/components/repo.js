@@ -1,17 +1,18 @@
-import { Container, Divider, Space, Button, Text, Tooltip } from "@mantine/core";
+import { Container, Divider, Space, Button, Text, Tooltip, Modal, Stack } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { getFile } from "../services/github-service";
 import { GITHUB_CONTEXT_REFRESH_ACTION_NAME, HTTP_BAD_REQUEST_STATUS_CODE, HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, LINEAGE_YAML_FILE_NAME, PACKAGE_JSON_FILE_NAME } from "../const";
 import { useNavigate } from "react-router";
 import { useGitHubDispatch } from "../context/github-context";
-import { IconAlertTriangle } from "@tabler/icons-react";
+import { IconAlertTriangle, IconBinaryTree2 } from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
 
 const Repo = ({repoData}) => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [showErrorMessage, setShowErrorMessage] = useState(false);
     const [errorMessage, setErrorMessage] = useState(undefined);
-    const [bothFilesExist, setBothFilesExist] = useState(false);
+    const [opened, handlers] = useDisclosure();
     const dispatch = useGitHubDispatch();
 
     const loaderProps = {
@@ -44,17 +45,11 @@ const Repo = ({repoData}) => {
             }
 
             if (!lineageYamlDependencies.status && !packageJsonDependencies.status) {
-                return setBothFilesExist(true);
+                return handlers.open();
             }
 
             const finalDependencies = lineageYamlDependencies.status ? packageJsonDependencies.packages : lineageYamlDependencies;
-            dispatch({
-                type: GITHUB_CONTEXT_REFRESH_ACTION_NAME,
-                dependencies: finalDependencies
-            });
-            navigate(`/lineage/${repoData.full_name}`, {
-                state: finalDependencies
-            });
+            navigateToLineagePage(finalDependencies);
         }
         asyncEffect();
     }, [
@@ -66,7 +61,9 @@ const Repo = ({repoData}) => {
         dispatch, 
         showErrorMessage, 
         errorMessage, 
-        setErrorMessage
+        setErrorMessage,
+        opened,
+        handlers
     ]);
 
     const setErrorState = (errorMessage) => {
@@ -80,6 +77,40 @@ const Repo = ({repoData}) => {
         if (!isLoading) {
             setIsLoading(true);
         }
+    };
+
+    const navigateToLineagePage = (dependencies) => {
+        dispatch({
+            type: GITHUB_CONTEXT_REFRESH_ACTION_NAME,
+            dependencies: dependencies
+        });
+        navigate(`/lineage/${repoData.full_name}`, {
+            state: dependencies
+        });
+    };
+
+    const onModalButtonClick = async (fileName) => {
+        const dependencies = await getFile(repoData.full_name, fileName);
+        navigateToLineagePage(dependencies);
+    };
+
+    const getModal = () => {
+        return (
+            <Modal opened={opened} onClose={handlers.close}>
+                <Stack gap='md'>
+                    <Tooltip label={LINEAGE_YAML_FILE_NAME}>
+                        <Button variant="light" rightSection={<IconBinaryTree2 />} onClick={() => onModalButtonClick(LINEAGE_YAML_FILE_NAME)}>
+                            Custom dependencies
+                        </Button>
+                    </Tooltip>
+                    <Tooltip label={PACKAGE_JSON_FILE_NAME}>
+                        <Button variant="light" onClick={() => onModalButtonClick(PACKAGE_JSON_FILE_NAME)} rightSection={<IconBinaryTree2 />}>
+                            NPM dependencies
+                        </Button>
+                    </Tooltip>
+                </Stack>
+            </Modal>
+        );
     };
 
     const getDefaultButton = () => {
@@ -108,6 +139,7 @@ const Repo = ({repoData}) => {
     if (repoData.description && repoData.description !== '') {
         return (
             <Container>
+                {getModal()}
                 <Divider />
                 <Tooltip label={repoData.description}>
                     {getDefaultButton()}
@@ -118,6 +150,7 @@ const Repo = ({repoData}) => {
 
     return (
         <Container>
+            {getModal()}
             <Divider />
             {getDefaultButton()}
         </Container>
