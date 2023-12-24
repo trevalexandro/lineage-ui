@@ -1,3 +1,4 @@
+import { checkHttpStatus } from "./base-service";
 
 export const getPackages = async (packageName, version) => {
     const regex = /[^0-9.]/;

@@ -1,5 +1,6 @@
 import { ACCESS_TOKEN_SESSION_STORAGE_KEY_NAME, HTTP_OK_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE } from "../const";
 import { AES, enc } from "crypto-js";
+import { checkHttpStatus } from "./base-service";
 
 export const authenticate = async (code) => {    
     const bodyJson = JSON.stringify({code});
@@ -30,7 +31,7 @@ export const getRepos = async (pageNumber, pageCount = 30) => {
 
 export const getFile = async (repoFullName, filePath, omitContent = false) => {
     const accessToken = getDecryptedToken();
-    const res = accessToken ? await fetch(`${process.env.REACT_APP_BFF_URL}/repos/${repoFullName}/${filePath}&omitContent=${omitContent}`, {
+    const res = accessToken ? await fetch(`${process.env.REACT_APP_BFF_URL}/repos/${repoFullName}/${filePath}?omitContent=${omitContent}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${accessToken}`
@@ -64,16 +65,6 @@ export const isHealthy = async (healthCheckEndpoint) => {
         return false;
     }
 }
-
-const checkHttpStatus = async (res) => {
-    if (res.status !== HTTP_OK_RESPONSE_STATUS_CODE) {
-        const {status} = res;
-        return {status};
-    }
-    
-    const data = await res.json();
-    return data;
-};
 
 const getDecryptedToken = () => {
     const encryptedVal = sessionStorage.getItem(ACCESS_TOKEN_SESSION_STORAGE_KEY_NAME);

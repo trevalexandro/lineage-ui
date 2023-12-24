@@ -90,12 +90,15 @@ const Repo = ({repoData}) => {
     };
 
     const navigateToLineagePage = (dependencies) => {
+        const newState = {};
+        newState.dependencies = dependencies.dependencies ?? dependencies;
+
         dispatch({
             type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
-            dependencies
+            dependencies: newState
         });
         navigate(`/lineage/${repoData.full_name}`, {
-            state: dependencies
+            state: newState
         });
     };
 

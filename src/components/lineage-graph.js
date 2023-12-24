@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Tree from 'react-d3-tree';
-
+// TODO: Fix formatting for long node names
+// TODO: Fix error when clicking on NPM package node
 const LineageGraph = ({dependencies, rootName, onNodeClick}) => {
     const [hoveringOverNode, setHoveringOverNode] = useState(false);
     const [nodeKey, setNodeKey] = useState(undefined);
@@ -17,9 +18,9 @@ const LineageGraph = ({dependencies, rootName, onNodeClick}) => {
         }
 
         const {dependencyType} = val;
-        attributes.dependencyType = dependencyType;
+        returnObj.attributes.dependencyType = dependencyType;
         if (val.version && val.version !== '') {
-            attributes.version = val.version;
+            returnObj.attributes.version = val.version;
         }
         return returnObj;
     });

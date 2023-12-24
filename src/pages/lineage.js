@@ -4,7 +4,7 @@ import LineageGraph from "../components/lineage-graph";
 import { Stack, Modal, Button, useMantineTheme, Tooltip, Center, Loader } from "@mantine/core";
 import '../css/pages/lineage.css';
 import { useEffect, useState } from "react";
-import { LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE, REPO_FULL_NAME_PREFIX } from "../const";
+import { LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE, REPO_FULL_NAME_PREFIX, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, ACCESS_TOKEN_SESSION_STORAGE_KEY_NAME, HTTP_NOT_FOUND_RESPONSE_STATUS_CODE } from "../const";
 import { getFile, isHealthy } from "../services/github-service";
 import { DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME } from "../const";
 import CustomPagination, { getPaginatedResults } from "../components/custom-pagination";
@@ -32,11 +32,17 @@ const Lineage = () => {
     const [rootNodeName, setRootNodeName] = useState(undefined);
     const [gitHubRepositoryName, setGitHubRepositoryName] = useState(undefined);
     const [dependenciesLoading, setDependenciesLoading] = useState(false);
+    const [showErrorMessage, setShowErrorMessage] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(undefined);
 
     const graphStyling = {
         root: { 
             height: 'inherit' 
         } 
+    };
+
+    const loaderProps = {
+        type: 'bars'
     };
     
     useEffect(() => {
@@ -92,7 +98,11 @@ const Lineage = () => {
         gitHubRepositoryName,
         setGitHubRepositoryName,
         dependenciesLoading,
-        setDependenciesLoading
+        setDependenciesLoading,
+        showErrorMessage,
+        setShowErrorMessage,
+        errorMessage,
+        setErrorMessage
     ]);
 
     const onPaginationClick = (nextPage) => {
@@ -114,6 +124,11 @@ const Lineage = () => {
             navigate('/');
             return;
         }
+        if (dependencies.status && dependencies.status === HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
+            setShowErrorMessage(true);
+            setErrorMessage("This repo doesn't have a lineage.yaml file!");
+            return;
+        }
 
         dispatch({
             type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
@@ -121,6 +136,7 @@ const Lineage = () => {
         });
         setRootNodeName(repoName);
         setDependenciesLoading(false);
+        handlers.close();
     };
 
     const onNodeClick = async (node) => {
@@ -134,7 +150,7 @@ const Lineage = () => {
 
             dispatch({
                 type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
-                dependencies: dependencies
+                dependencies: { dependencies }
             });
             setRootNodeName(node.data.name);
             setDependenciesLoading(false);
@@ -183,13 +199,20 @@ const Lineage = () => {
             <Modal opened={opened} onClose={handlers.close}>
                 <Stack gap='md'>
                     <Tooltip label={healthEndpoint}>
-                        <Button variant="light" rightSection={getHealthCheckButtonIcon()} color={getHealthCheckButtonColor()} loading={healthEndpointLoading} loaderProps={{type: 'bars'}} onClick={onHealthCheckButtonClick}>
+                        <Button variant="light" rightSection={getHealthCheckButtonIcon()} color={getHealthCheckButtonColor()} loading={healthEndpointLoading} loaderProps={loaderProps} onClick={onHealthCheckButtonClick}>
                             {getHealthCheckButtonText()}
                         </Button>
                     </Tooltip>
-                    {gitHubRepositoryLink &&
+                    {gitHubRepositoryLink && !showErrorMessage &&
                         <Tooltip label={gitHubRepositoryLink}>
-                            <Button variant="light" onClick={onDependenciesButtonClick} rightSection={<IconBinaryTree2 />}>
+                            <Button variant="light" onClick={onDependenciesButtonClick} rightSection={<IconBinaryTree2 />} loading={dependenciesLoading} loaderProps={loaderProps}>
+                                {`${nodeName} dependencies`}
+                            </Button>
+                        </Tooltip>
+                    }
+                    {gitHubRepositoryLink && showErrorMessage &&
+                        <Tooltip label={errorMessage}>
+                            <Button variant="subtle" rightSection={<IconAlertTriangle />} color="red">
                                 {`${nodeName} dependencies`}
                             </Button>
                         </Tooltip>
@@ -214,7 +237,6 @@ const Lineage = () => {
     };
 
     const onDependenciesButtonClick = async () => {
-        handlers.close();
         await getGitHubDependencies();
     };
 
@@ -242,7 +264,7 @@ const Lineage = () => {
         );
     }
 
-    if (dependenciesLoading) {
+    if (dependenciesLoading && !opened) {
         return (
             <>
                 <Center>
