@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Tree from 'react-d3-tree';
 
-const LineageGraph = ({dependencies, repoName, onNodeClick}) => {
+const LineageGraph = ({dependencies, rootName, onNodeClick}) => {
     const [hoveringOverNode, setHoveringOverNode] = useState(false);
     const [nodeKey, setNodeKey] = useState(undefined);
 
@@ -25,9 +25,10 @@ const LineageGraph = ({dependencies, repoName, onNodeClick}) => {
     });
 
     const data = {
-        name: repoName,
+        name: rootName,
+        dataKey: rootName,
         children
-    }
+    };
 
     const x = window.innerWidth / 2;
     const y = window.innerHeight / 3;

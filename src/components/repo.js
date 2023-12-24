@@ -1,9 +1,9 @@
 import { Container, Divider, Space, Button, Text, Tooltip, Modal, Stack } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { getFile } from "../services/github-service";
-import { GITHUB_CONTEXT_REFRESH_ACTION_NAME, HTTP_BAD_REQUEST_STATUS_CODE, HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, LINEAGE_YAML_FILE_NAME, PACKAGE_JSON_FILE_NAME } from "../const";
+import { DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME, HTTP_BAD_REQUEST_STATUS_CODE, HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, LINEAGE_YAML_FILE_NAME, PACKAGE_JSON_FILE_NAME } from "../const";
 import { useNavigate } from "react-router";
-import { useGitHubDispatch } from "../context/github-context";
+import { useDependencyDispatch } from "../context/dependency-context";
 import { IconAlertTriangle, IconBinaryTree2 } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 
@@ -13,7 +13,7 @@ const Repo = ({repoData}) => {
     const [showErrorMessage, setShowErrorMessage] = useState(false);
     const [errorMessage, setErrorMessage] = useState(undefined);
     const [opened, handlers] = useDisclosure();
-    const dispatch = useGitHubDispatch();
+    const dispatch = useDependencyDispatch();
 
     const loaderProps = {
         type: 'bars'
@@ -21,6 +21,8 @@ const Repo = ({repoData}) => {
 
     useEffect(() => {
         const asyncEffect = async () => {
+            let fileShouldExist = false;
+
             if (!isLoading) {
                 return;
             }
@@ -40,7 +42,15 @@ const Repo = ({repoData}) => {
                 return;
             }
 
-            if (lineageYamlDependencies.status === HTTP_NOT_FOUND_RESPONSE_STATUS_CODE && packageJsonDependencies.status === HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
+            if (!lineageYamlDependencies.status || lineageYamlDependencies.status !== HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
+                fileShouldExist = true;
+            }
+
+            if (!packageJsonDependencies.status || packageJsonDependencies.status !== HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
+                fileShouldExist = true;
+            }
+
+            if (!fileShouldExist) {
                 return setErrorState("This repo doesn't have a lineage.yaml or package.json file!");
             }
 
@@ -81,8 +91,8 @@ const Repo = ({repoData}) => {
 
     const navigateToLineagePage = (dependencies) => {
         dispatch({
-            type: GITHUB_CONTEXT_REFRESH_ACTION_NAME,
-            dependencies: dependencies
+            type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
+            dependencies
         });
         navigate(`/lineage/${repoData.full_name}`, {
             state: dependencies
@@ -91,6 +101,17 @@ const Repo = ({repoData}) => {
 
     const onModalButtonClick = async (fileName) => {
         const dependencies = await getFile(repoData.full_name, fileName);
+
+        if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
+            navigate('/');
+            return;
+        }
+        if (dependencies.status && dependencies.status === HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
+            handlers.close();
+            setErrorState("This file doesn't exist anymore! Did you just delete it?");
+            return;
+        }
+
         navigateToLineagePage(dependencies);
     };
 

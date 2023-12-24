@@ -1,31 +1,27 @@
 import { useParams, useLocation, useNavigate } from "react-router";
-import { useGitHubDispatch, useGitHubState } from "../context/github-context";
+import { useDependencyDispatch, useDependencyState } from "../context/dependency-context";
 import LineageGraph from "../components/lineage-graph";
-import { Center, Loader, Text, Title, Stack, Modal, Button, useMantineTheme, Tooltip, Anchor } from "@mantine/core";
+import { Stack, Modal, Button, useMantineTheme, Tooltip, Center, Loader } from "@mantine/core";
 import '../css/pages/lineage.css';
 import { useEffect, useState } from "react";
-import { HTTP_BAD_REQUEST_STATUS_CODE, LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE, REPO_FULL_NAME_PREFIX } from "../const";
+import { LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE, REPO_FULL_NAME_PREFIX } from "../const";
 import { getFile, isHealthy } from "../services/github-service";
-import { HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, GITHUB_CONTEXT_REFRESH_ACTION_NAME } from "../const";
+import { DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME } from "../const";
 import CustomPagination, { getPaginatedResults } from "../components/custom-pagination";
 import { useDisclosure } from "@mantine/hooks";
 import { IconAlertTriangle, IconBinaryTree2, IconCheck, IconHeartbeat } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import HamburgerMenu from "../components/hamburger-menu";
-
-
+import { getPackages } from "../services/npm-service";
 
 const Lineage = () => {
     const theme = useMantineTheme();
-    const state = useGitHubState();
+    const state = useDependencyState();
     const params = useParams();
     const location = useLocation();
-    const dispatch = useGitHubDispatch();
+    const dispatch = useDependencyDispatch();
     const navigate = useNavigate();
     const [opened, handlers] = useDisclosure();
-    const [showNotFoundMessage, setShowNotFoundMessage] = useState(false);
-    const [showBadRequestMessage, setShowBadRequestMessage] = useState(false);
-    const [isLoading, setIsLoading] = useState(!state.dependencies && !location.state);
     const [pageNumber, setPageNumber] = useState(1);
     const [paginatedResults, setPaginatedResults] = useState([]);
     const [healthEndpoint, setHealthEndpoint] = useState(undefined);
@@ -33,6 +29,9 @@ const Lineage = () => {
     const [nodeIsHealthy, setNodeIsHealthy] = useState(undefined);
     const [healthEndpointLoading, setHealthEndpointLoading] = useState(false);
     const [nodeName, setNodeName] = useState(undefined);
+    const [rootNodeName, setRootNodeName] = useState(undefined);
+    const [gitHubRepositoryName, setGitHubRepositoryName] = useState(undefined);
+    const [dependenciesLoading, setDependenciesLoading] = useState(false);
 
     const graphStyling = {
         root: { 
@@ -59,37 +58,11 @@ const Lineage = () => {
             if (location.state && !state.dependencies) {
                 const {dependencies} = location.state;
                 dispatch({
-                    type: GITHUB_CONTEXT_REFRESH_ACTION_NAME,
+                    type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
                     dependencies
                 });
                 return;
             }
-
-            // accessing the site externally or traversing from parent graph
-            const dependencies = await getFile(`${params.owner}/${params.repoName}`, LINEAGE_YAML_FILE_NAME);
-            if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
-                navigate('/');
-                return;
-            }
-
-            if (dependencies.status && dependencies.status === HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
-                setShowNotFoundMessage(true);
-                setIsLoading(false);
-                return;
-            }
-
-            if (dependencies.status && dependencies.status === HTTP_BAD_REQUEST_STATUS_CODE) {
-                setShowBadRequestMessage(true);
-                setIsLoading(false);
-                return;
-            }
-
-            dispatch({
-                type: GITHUB_CONTEXT_REFRESH_ACTION_NAME,
-                dependencies
-            });
-            window.history.replaceState(dependencies);
-            setIsLoading(false);
         };
         asyncEffect();
     }, [
@@ -101,12 +74,6 @@ const Lineage = () => {
         navigate,
         opened,
         handlers, 
-        showNotFoundMessage, 
-        setShowNotFoundMessage,
-        showBadRequestMessage,
-        setShowBadRequestMessage, 
-        isLoading, 
-        setIsLoading, 
         pageNumber, 
         setPageNumber,
         paginatedResults,
@@ -119,7 +86,13 @@ const Lineage = () => {
         healthEndpointLoading,
         setHealthEndpointLoading,
         nodeName,
-        setNodeName
+        setNodeName,
+        rootNodeName,
+        setRootNodeName,
+        gitHubRepositoryName,
+        setGitHubRepositoryName,
+        dependenciesLoading,
+        setDependenciesLoading
     ]);
 
     const onPaginationClick = (nextPage) => {
@@ -130,8 +103,43 @@ const Lineage = () => {
         setPaginatedResults(newNodes);
     };
 
+    const getGitHubDependencies = async (node = undefined) => {
+        setDependenciesLoading(true);
+        const repoLink = node?.data?.githubRepositoryLink ?? gitHubRepositoryLink;
+        const repoFullName = repoLink.split(REPO_FULL_NAME_PREFIX)[1];
+        const repoName = node?.data?.name ?? gitHubRepositoryName;
+        const dependencies = await getFile(repoFullName, LINEAGE_YAML_FILE_NAME);
+            
+        if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
+            navigate('/');
+            return;
+        }
+
+        dispatch({
+            type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
+            dependencies: dependencies
+        });
+        setRootNodeName(repoName);
+        setDependenciesLoading(false);
+    };
+
     const onNodeClick = async (node) => {
-        // TODO: Documentation
+        if (node.data.version) {
+            setDependenciesLoading(true);
+            const dependencies = await getPackages(node.data.name, node.data.version);
+            if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
+                navigate('/');
+                return;
+            }
+
+            dispatch({
+                type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
+                dependencies: dependencies
+            });
+            setRootNodeName(node.data.name);
+            setDependenciesLoading(false);
+        }
+
         if (!node.data.githubRepositoryLink && !node.data.healthEndpoint) {
             notifications.show({
                 title: "Node notification",
@@ -140,15 +148,15 @@ const Lineage = () => {
         }
 
         if (node.data.githubRepositoryLink && !node.data.healthEndpoint) {
-            const repoFullName = node.data.githubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
-            window.open(`/lineage/${repoFullName}`, '_blank');
+            await getGitHubDependencies(node);
             return;
         }
 
         if (node.data.healthEndpoint) {
-            setGitHubRepositoryLink(node.data.githubRepositoryLink); // could be undefined
+            setGitHubRepositoryLink(node.data.githubRepositoryLink); // could this be undefined?
             setHealthEndpoint(node.data.healthEndpoint);
             setHealthEndpointLoading(node.data.healthEndpoint && !node.data.githubRepositoryLink);
+            setGitHubRepositoryName(node.data.name);
             handlers.open();
         }
         setNodeName(node.data.name);
@@ -205,69 +213,18 @@ const Lineage = () => {
         }
     };
 
-    const onDependenciesButtonClick = () => {
-        const repoFullName = gitHubRepositoryLink.split(REPO_FULL_NAME_PREFIX)[1];
+    const onDependenciesButtonClick = async () => {
         handlers.close();
-        window.open(`/lineage/${repoFullName}`, '_blank');
+        await getGitHubDependencies();
     };
 
-    if (isLoading) {
-        return (
-            <Center>
-                <Loader type="bars" />
-            </Center>
-        );
-    }
-
-    if (showBadRequestMessage) {
-        return (
-            <>
-                <HamburgerMenu />
-                <Center>
-                    <Stack align='center' gap='md'>
-                        <Title>
-                            400
-                        </Title>
-                        <Text size='xl'>
-                            I'm afraid the YAML configuration for this repo doesn't contain the right structure.
-                        </Text>
-                        <Text size='xl'>
-                            That can happen when the configuration is empty, or the "Dependencies" field is misspelled.
-                        </Text>
-                        <Text size='xl'>
-                            You can find more documentation on the structure with the link below.
-                        </Text>
-                        <Anchor href={process.env.REACT_APP_DOCUMENTATION_URL} target="_blank">
-                            Lineage GitHub
-                        </Anchor>
-                    </Stack>
-                </Center>
-            </>
-        );
-    }
-
-    if (showNotFoundMessage) {
-        return (
-            <>
-                <HamburgerMenu />
-                <Center>
-                    <Stack align="center" gap='md'>
-                        <Title>
-                            404
-                        </Title>
-                        <Text size="xl">
-                            I'm afraid the YAML configuration for this repo doesn't exist.
-                        </Text>
-                        <Text size="xl">
-                            That can happen when you follow a link to something that has since been deleted, or the configuration never existed.
-                        </Text>
-                        <Text size="xl">
-                            Sorry about that.
-                        </Text>
-                    </Stack>
-                </Center>
-            </>
-        );
+    if (!state.dependencies && !location.state) { // someone accessing the app externally or traversing 
+        const accessToken = sessionStorage.getItem(ACCESS_TOKEN_SESSION_STORAGE_KEY_NAME);
+        if (accessToken && accessToken !== '') {
+            navigate('/repos');
+        } else {
+            navigate('/');
+        }
     }
 
     if (paginatedResults.length === 0) {
@@ -278,9 +235,19 @@ const Lineage = () => {
                 <HamburgerMenu />
                 {getModal()}
                 <Stack gap='md' styles={graphStyling}>
-                    <LineageGraph dependencies={seed} repoName={params.repoName} onNodeClick={onNodeClick} />
+                    <LineageGraph dependencies={seed} rootName={params.repoName} onNodeClick={onNodeClick} />
                     <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={dependencies.length} pageCount={NUM_NODES_PER_PAGE} />
                 </Stack>
+            </>
+        );
+    }
+
+    if (dependenciesLoading) {
+        return (
+            <>
+                <Center>
+                    <Loader type="bars" />
+                </Center>
             </>
         );
     }
@@ -290,7 +257,7 @@ const Lineage = () => {
             <HamburgerMenu />
             {getModal()}
             <Stack gap='md' styles={graphStyling}>
-                <LineageGraph dependencies={paginatedResults} repoName={params.repoName} onNodeClick={onNodeClick} />
+                <LineageGraph dependencies={paginatedResults} rootName={params.repoName} onNodeClick={onNodeClick} />
                 <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={state.dependencies.length} pageCount={NUM_NODES_PER_PAGE} />
             </Stack>
         </>
