@@ -62,11 +62,12 @@ const Lineage = () => {
 
             // refresh after the first render
             if (location.state && !state.dependencies) {
-                const {dependencies} = location.state;
                 dispatch({
                     type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
-                    dependencies
+                    dependencies: location.state
                 });
+                setPageNumber(1);
+                setPaginatedResults(getPaginatedResults(1, NUM_NODES_PER_PAGE, location.state.dependencies));
                 return;
             }
         };
@@ -142,7 +143,9 @@ const Lineage = () => {
     const onNodeClick = async (node) => {
         if (node.data.version) {
             setDependenciesLoading(true);
-            const dependencies = await getPackages(node.data.name, node.data.version);
+            const dependencies = await getPackages(node.data.attributes.name, node.data.version);
+            const updatedState = {};
+            updatedState.dependencies = dependencies.packages;
             if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
                 navigate('/');
                 return;
@@ -150,10 +153,15 @@ const Lineage = () => {
 
             dispatch({
                 type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
-                dependencies: { dependencies }
+                dependencies: updatedState
             });
+
             setRootNodeName(node.data.name);
             setDependenciesLoading(false);
+            setNodeName(node.data.name);
+            setPageNumber(1);
+            setPaginatedResults(getPaginatedResults(1, NUM_NODES_PER_PAGE, updatedState.dependencies));
+            return;
         }
 
         if (!node.data.githubRepositoryLink && !node.data.healthEndpoint) {
@@ -240,7 +248,7 @@ const Lineage = () => {
         await getGitHubDependencies();
     };
 
-    if (!state.dependencies && !location.state) { // someone accessing the app externally or traversing 
+    if (!state.dependencies && !location.state) { // someone accessing the app externally
         const accessToken = sessionStorage.getItem(ACCESS_TOKEN_SESSION_STORAGE_KEY_NAME);
         if (accessToken && accessToken !== '') {
             navigate('/repos');
@@ -257,7 +265,7 @@ const Lineage = () => {
                 <HamburgerMenu />
                 {getModal()}
                 <Stack gap='md' styles={graphStyling}>
-                    <LineageGraph dependencies={seed} rootName={params.repoName} onNodeClick={onNodeClick} />
+                    <LineageGraph dependencies={seed} rootName={rootNodeName ?? params.repoName} onNodeClick={onNodeClick} />
                     <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={dependencies.length} pageCount={NUM_NODES_PER_PAGE} />
                 </Stack>
             </>
@@ -279,7 +287,7 @@ const Lineage = () => {
             <HamburgerMenu />
             {getModal()}
             <Stack gap='md' styles={graphStyling}>
-                <LineageGraph dependencies={paginatedResults} rootName={params.repoName} onNodeClick={onNodeClick} />
+                <LineageGraph dependencies={paginatedResults} rootName={rootNodeName ?? params.repoName} onNodeClick={onNodeClick} />
                 <CustomPagination pageNumber={pageNumber} onClick={onPaginationClick} totalCount={state.dependencies.length} pageCount={NUM_NODES_PER_PAGE} />
             </Stack>
         </>

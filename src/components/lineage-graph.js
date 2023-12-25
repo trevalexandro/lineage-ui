@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import Tree from 'react-d3-tree';
-// TODO: Fix formatting for long node names
+import { NODE_TITLE_MAX_CHARS } from '../const';
 // TODO: Fix error when clicking on NPM package node
+// TODO: Address multiple versions in NPM API response
 const LineageGraph = ({dependencies, rootName, onNodeClick}) => {
     const [hoveringOverNode, setHoveringOverNode] = useState(false);
     const [nodeKey, setNodeKey] = useState(undefined);
@@ -13,10 +14,15 @@ const LineageGraph = ({dependencies, rootName, onNodeClick}) => {
             ...val
         };
 
+        if (returnObj.name.length > NODE_TITLE_MAX_CHARS) {
+            returnObj.name = `${returnObj.name.substring(0, NODE_TITLE_MAX_CHARS - 1)}...`;
+        }
+
         if (!hoveringOverNode || nodeKey !== index) {
             return returnObj;
         }
 
+        returnObj.attributes.name = val.name;
         const {dependencyType} = val;
         returnObj.attributes.dependencyType = dependencyType;
         if (val.version && val.version !== '') {
