@@ -141,9 +141,13 @@ const Lineage = () => {
     };
 
     const onNodeClick = async (node) => {
+        if (node.data.parentNode) {
+            return;
+        }
+
         if (node.data.version) {
             setDependenciesLoading(true);
-            const dependencies = await getPackages(node.data.attributes.name, node.data.version);
+            const dependencies = await getPackages(node.data.fullName, node.data.version);
             const updatedState = {};
             updatedState.dependencies = dependencies.packages;
             if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
@@ -156,7 +160,7 @@ const Lineage = () => {
                 dependencies: updatedState
             });
 
-            setRootNodeName(node.data.name);
+            setRootNodeName(node.data.fullName);
             setDependenciesLoading(false);
             setNodeName(node.data.name);
             setPageNumber(1);

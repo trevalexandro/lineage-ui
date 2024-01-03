@@ -1,35 +1,60 @@
 import { useState } from 'react';
 import Tree from 'react-d3-tree';
 import { NODE_TITLE_MAX_CHARS } from '../const';
-// TODO: Fix error when clicking on NPM package node
-// TODO: Address multiple versions in NPM API response
+
 const LineageGraph = ({dependencies, rootName, onNodeClick}) => {
     const [hoveringOverNode, setHoveringOverNode] = useState(false);
     const [nodeKey, setNodeKey] = useState(undefined);
 
-    const children = dependencies.map((val, index) => {
-        const returnObj = {
-            key: index,
+    const placeNode = (nodeObj, tree) => {
+        const aggregatePackage = tree.find(val => val.fullName === nodeObj.fullName || val.key === nodeObj.fullName);
+        
+        if (!aggregatePackage) {
+            tree.push(nodeObj);
+            return tree;
+        }
+
+        if (!aggregatePackage.children) {
+            const parentNode = {
+                name: aggregatePackage.name,
+                key: aggregatePackage.fullName,
+                parentNode: true
+            };
+            parentNode.children = [];
+            parentNode.children.push(aggregatePackage);
+            parentNode.children.push(nodeObj);
+            tree.push(parentNode);
+            return tree.filter(val => val?.fullName !== nodeObj.fullName);
+        } 
+
+        aggregatePackage.children.push(nodeObj);
+        return tree;
+    };
+
+    const children = dependencies.reduce((prev, curr, currIndex) => {
+        const newObj = {
+            key: currIndex,
             attributes: {},
-            ...val
+            fullName: curr.name,
+            ...curr
         };
 
-        if (returnObj.name.length > NODE_TITLE_MAX_CHARS) {
-            returnObj.name = `${returnObj.name.substring(0, NODE_TITLE_MAX_CHARS - 1)}...`;
+        if (newObj.name.length > NODE_TITLE_MAX_CHARS) {
+            newObj.name = `${newObj.name.substring(0, NODE_TITLE_MAX_CHARS - 1)}...`;
         }
 
-        if (!hoveringOverNode || nodeKey !== index) {
-            return returnObj;
+        if (!hoveringOverNode || nodeKey !== currIndex) {
+            return placeNode(newObj, prev);
         }
 
-        returnObj.attributes.name = val.name;
-        const {dependencyType} = val;
-        returnObj.attributes.dependencyType = dependencyType;
-        if (val.version && val.version !== '') {
-            returnObj.attributes.version = val.version;
+        newObj.attributes.name = curr.name;
+        const {dependencyType} = curr;
+        newObj.attributes.dependencyType = dependencyType;
+        if (curr.version && curr.version !== '') {
+            newObj.attributes.version = curr.version;
         }
-        return returnObj;
-    });
+        return placeNode(newObj, prev);
+    }, []);
 
     const data = {
         name: rootName,
