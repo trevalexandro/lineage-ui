@@ -37,7 +37,7 @@ const Repo = ({repoData}) => {
             }            
             
             const packageJsonDependencies = await getFile(repoData.full_name, PACKAGE_JSON_FILE_NAME, !lineageYamlDependencies.status);
-            if (packageJsonDependencies.status && packageJsonDependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
+            if (packageJsonDependencies?.status && packageJsonDependencies?.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
                 navigate('/');
                 return;
             }
@@ -46,7 +46,7 @@ const Repo = ({repoData}) => {
                 fileShouldExist = true;
             }
 
-            if (!packageJsonDependencies.status || packageJsonDependencies.status !== HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
+            if (!packageJsonDependencies?.status || packageJsonDependencies?.status !== HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
                 fileShouldExist = true;
             }
 
@@ -54,7 +54,7 @@ const Repo = ({repoData}) => {
                 return setErrorState("This repo doesn't have a lineage.yaml or package.json file!");
             }
 
-            if (!lineageYamlDependencies.status && !packageJsonDependencies.status) {
+            if (!lineageYamlDependencies.status && !packageJsonDependencies?.status) {
                 return handlers.open();
             }
 
@@ -91,7 +91,7 @@ const Repo = ({repoData}) => {
 
     const navigateToLineagePage = (dependencies) => {
         const newState = {};
-        newState.dependencies = dependencies.dependencies ?? dependencies;
+        newState.dependencies = dependencies.packages ?? dependencies.dependencies;
 
         dispatch({
             type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
@@ -118,9 +118,14 @@ const Repo = ({repoData}) => {
         navigateToLineagePage(dependencies);
     };
 
+    const onModalClose = () => {
+        setIsLoading(false);
+        handlers.close();
+    };
+
     const getModal = () => {
         return (
-            <Modal opened={opened} onClose={handlers.close}>
+            <Modal opened={opened} onClose={onModalClose}>
                 <Stack gap='md'>
                     <Tooltip label={LINEAGE_YAML_FILE_NAME}>
                         <Button variant="light" rightSection={<IconBinaryTree2 />} onClick={() => onModalButtonClick(LINEAGE_YAML_FILE_NAME)}>

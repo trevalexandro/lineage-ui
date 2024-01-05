@@ -1,7 +1,7 @@
 import { useParams, useLocation, useNavigate } from "react-router";
 import { useDependencyDispatch, useDependencyState } from "../context/dependency-context";
 import LineageGraph from "../components/lineage-graph";
-import { Stack, Modal, Button, useMantineTheme, Tooltip, Center, Loader } from "@mantine/core";
+import { Stack, Modal, Button, useMantineTheme, Tooltip, Center, Loader, Title, Text } from "@mantine/core";
 import '../css/pages/lineage.css';
 import { useEffect, useState } from "react";
 import { LINEAGE_YAML_FILE_NAME, NUM_NODES_PER_PAGE, REPO_FULL_NAME_PREFIX, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, ACCESS_TOKEN_SESSION_STORAGE_KEY_NAME, HTTP_NOT_FOUND_RESPONSE_STATUS_CODE } from "../const";
@@ -128,6 +128,7 @@ const Lineage = () => {
         if (dependencies.status && dependencies.status === HTTP_NOT_FOUND_RESPONSE_STATUS_CODE) {
             setShowErrorMessage(true);
             setErrorMessage("This repo doesn't have a lineage.yaml file!");
+            setDependenciesLoading(false);
             return;
         }
 
@@ -140,31 +141,45 @@ const Lineage = () => {
         handlers.close();
     };
 
+    const getNpmDependencies = async (node) => {
+        setDependenciesLoading(true);
+        const dependencies = await getPackages(node.data.fullName, node.data.version);
+        const updatedState = {};
+        
+        if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
+            navigate('/');
+            return;
+        }
+
+        if (!dependencies.status && (dependencies.packages === null || dependencies.packages === undefined)) {
+            notifications.show({
+                title: "Node notification",
+                message: "This NPM dependency doesn't have any child nodes."
+            });
+            setDependenciesLoading(false);
+            return;
+        }
+
+        updatedState.dependencies = dependencies.packages;
+        dispatch({
+            type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
+            dependencies: updatedState
+        });
+
+        setRootNodeName(node.data.fullName);
+        setDependenciesLoading(false);
+        setNodeName(node.data.name);
+        setPageNumber(1);
+        setPaginatedResults(getPaginatedResults(1, NUM_NODES_PER_PAGE, updatedState.dependencies));
+    };
+
     const onNodeClick = async (node) => {
         if (node.data.parentNode) {
             return;
         }
 
         if (node.data.version) {
-            setDependenciesLoading(true);
-            const dependencies = await getPackages(node.data.fullName, node.data.version);
-            const updatedState = {};
-            updatedState.dependencies = dependencies.packages;
-            if (dependencies.status && dependencies.status === HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE) {
-                navigate('/');
-                return;
-            }
-
-            dispatch({
-                type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
-                dependencies: updatedState
-            });
-
-            setRootNodeName(node.data.fullName);
-            setDependenciesLoading(false);
-            setNodeName(node.data.name);
-            setPageNumber(1);
-            setPaginatedResults(getPaginatedResults(1, NUM_NODES_PER_PAGE, updatedState.dependencies));
+            await getNpmDependencies(node);
             return;
         }
 
@@ -259,6 +274,33 @@ const Lineage = () => {
         } else {
             navigate('/');
         }
+    }
+
+    if (showErrorMessage) {
+        return (
+            <>
+                <HamburgerMenu />
+                <Center>
+                    <Stack align="center" gap='md'>
+                        <Title>
+                            404
+                        </Title>
+                        <Text size="xl">
+                            I'm afraid the YAML configuration for the specified repo doesn't exist.
+                        </Text>
+                        <Text size="xl">
+                            Maybe your GitHub repo link is incorrect?
+                        </Text>
+                        <Text size='xl'>
+                            Maybe your configuration somehow got deleted before navigating here? Assuming it already existed.
+                        </Text>
+                        <Text size="xl">
+                            Regardless, sorry about that.
+                        </Text>
+                    </Stack>
+                </Center>  
+            </>
+        );
     }
 
     if (paginatedResults.length === 0) {
