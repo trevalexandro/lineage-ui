@@ -19,6 +19,19 @@ const Repo = ({repoData}) => {
         type: 'bars'
     };
 
+    const navigateToLineagePage = (dependencies) => {
+        const newState = {};
+        newState.dependencies = dependencies.packages ?? dependencies.dependencies;
+
+        dispatch({
+            type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
+            dependencies: newState
+        });
+        navigate(`/lineage/${repoData.full_name}`, {
+            state: newState
+        });
+    };
+
     useEffect(() => {
         const asyncEffect = async () => {
             let fileShouldExist = false;
@@ -88,19 +101,6 @@ const Repo = ({repoData}) => {
         if (!isLoading) {
             setIsLoading(true);
         }
-    };
-
-    const navigateToLineagePage = (dependencies) => {
-        const newState = {};
-        newState.dependencies = dependencies.packages ?? dependencies.dependencies;
-
-        dispatch({
-            type: DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME,
-            dependencies: newState
-        });
-        navigate(`/lineage/${repoData.full_name}`, {
-            state: newState
-        });
     };
 
     const onModalButtonClick = async (fileName) => {
