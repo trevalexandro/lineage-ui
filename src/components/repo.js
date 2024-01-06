@@ -1,5 +1,5 @@
 import { Container, Divider, Space, Button, Text, Tooltip, Modal, Stack } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getFile } from "../services/github-service";
 import { DEPENDENCY_CONTEXT_REFRESH_ACTION_NAME, HTTP_BAD_REQUEST_STATUS_CODE, HTTP_NOT_FOUND_RESPONSE_STATUS_CODE, HTTP_UNAUTHORIZED_RESPONSE_STATUS_CODE, LINEAGE_YAML_FILE_NAME, PACKAGE_JSON_FILE_NAME } from "../const";
 import { useNavigate } from "react-router";
@@ -19,7 +19,7 @@ const Repo = ({repoData}) => {
         type: 'bars'
     };
 
-    const navigateToLineagePage = (dependencies) => {
+    const navigateToLineagePage = useCallback((dependencies) => {
         const newState = {};
         newState.dependencies = dependencies.packages ?? dependencies.dependencies;
 
@@ -30,7 +30,7 @@ const Repo = ({repoData}) => {
         navigate(`/lineage/${repoData.full_name}`, {
             state: newState
         });
-    };
+    }, [repoData.full_name, dispatch, navigate]);
 
     useEffect(() => {
         const asyncEffect = async () => {
