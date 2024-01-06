@@ -1,70 +1,59 @@
-# Getting Started with Create React App
+# Lineage
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Lineage is a prototype web app built on top of GitHub's platform to easily identify a project's technical dependencies. It's free & currently in its infancy. As it gains more end users, the plan is to double down & add in more features to make this a powerful, robust application.
 
-## Available Scripts
+## Prerequisites
 
-In the project directory, you can run:
+- You must have a GitHub account.
+- You must be owner or contributor for the repository you're looking to integrate with Lineage. If your repository is owned by an organization, you might have to contact your admin to give Lineage the proper access controls. Otherwise, the repository won't be visible.
+- Your repository must have a `lineage.yaml` config file at the root.
 
-### `npm start`
+## Quickstart
+At the root of your repository, create a `lineage.yaml` file with the following content.
+```
+dependencies:
+  - name: tailwindcss
+    dependency_type: 'CSS framework'
+    github_repository_link: https://github.com/tailwindlabs/tailwindcss
+```
+Login to https://thelineage.dev & click on the repository you've added your configuration to. You should see a dependency node in the app now. The root node is named after your repository.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+![image](https://github.com/trevalexandro/lineage-ui/assets/17580038/3dbe6ea6-2b79-4553-8619-7b4eb1963841)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+If the repository specified for this dependency has its own `lineage.yaml` file, we can click on the node & traverse to tailwind's dependencies.
 
-### `npm test`
+You can also add dependencies for as many items as you'd like.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+![image](https://github.com/trevalexandro/lineage-ui/assets/17580038/6ceb1731-471f-4279-a9bd-0294273054a3)
 
-### `npm run build`
+## Fields
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### `dependencies - required`
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+This is the root field to list all dependencies that will be shown as nodes. Technically, it's YAML's way of declaring an array. If this is missing, or if you don't nest any values underneath it, you'll get an error or undesired functionality.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### `dependencies.name - preferred`
 
-### `npm run eject`
+This defines the name of the dependency & will show up as the name of the node in the app. While not having this won't cause an error, it's strongly recommended you include this value so you know what node/dependency you're looking at. Otherwise, the node will show without any name.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### `dependencies.dependency_type - preferred`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+This defines the type of dependency & will show when you hover over a node in the app. This is free-form text, so you can put whatever you'd like here. Once again, while not having this won't cause an error, it's strongly recommended you include this value so you know what type of dependency you have.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### `dependencies.github_repository_link - optional`
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+This defines the GitHub repository link for your dependency. If a `lineage.yaml` file exists in that repository, the app will open a new window with that project's dependencies. This creates a "traversal" effect that allows you to trace transitive dependencies.
 
-## Learn More
+### `dependencies.health_endpoint - optional`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+This defines a health check endpoint for your dependency. More than likely, this will apply to dependencies that are web APIs. By configuring this, you're able to easily know if you have a dependency that's down in real-time.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## FAQs
 
-### Code Splitting
+1. Does the `lineage.yaml` configuration allow custom fields? **No, currently, it only supports fields defined in the documentation. If this is a popular enough request in the future, this can certainly be reevaluated.**
+2. Is Lineage free to use? **Yes! Lineage is free to use.**
+3. Is Lineage open-source? **The front-end web app is open-source, but the backend APIs are not.**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Known Issues
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Due to this currently being a prototype/MVP, the backend APIs are on a lower tier of cloud infrastructure support. There might be latency issues from time to time.
