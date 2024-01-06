@@ -71,7 +71,7 @@ const Repo = ({repoData}) => {
                 return handlers.open();
             }
 
-            const finalDependencies = lineageYamlDependencies.status ? packageJsonDependencies.packages : lineageYamlDependencies;
+            const finalDependencies = lineageYamlDependencies.status ? packageJsonDependencies : lineageYamlDependencies;
             navigateToLineagePage(finalDependencies);
         }
         asyncEffect();
