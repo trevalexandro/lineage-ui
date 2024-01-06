@@ -6,9 +6,18 @@ Lineage is a prototype web app built on top of GitHub's platform to easily ident
 
 - You must have a GitHub account.
 - You must be owner or contributor for the repository you're looking to integrate with Lineage. If your repository is owned by an organization, you might have to contact your admin to give Lineage the proper access controls. Otherwise, the repository won't be visible.
-- Your repository must have a `lineage.yaml` config file at the root.
+- Your repository must have either a `lineage.yaml` custom config file or `package.json` file at the root.
 
-## Quickstart
+## NPM support
+
+If your project uses NPM packages, Lineage will read the contents of your `package.json` file out-of-the-box. Each dependency can be traversed by clicking on that node. Therefore, you can see all NPM dependencies for your project until there are none left to see!
+
+When a dependency supports multiple versions, Lineage will create a "sub-tree" that shows each compatible version. This allows you to see what would be the full dependency tree based on the version you're currently targeting.
+
+![image](https://github.com/trevalexandro/lineage-ui/assets/17580038/3b109a74-26f1-4ed7-a70f-42f2ec87c021)
+
+
+## Custom configuration example
 At the root of your repository, create a `lineage.yaml` file with the following content.
 ```
 dependencies:
@@ -24,7 +33,7 @@ If the repository specified for this dependency has its own `lineage.yaml` file,
 
 You can also add dependencies for as many items as you'd like.
 
-![image](https://github.com/trevalexandro/lineage-ui/assets/17580038/6ceb1731-471f-4279-a9bd-0294273054a3)
+![image](https://github.com/trevalexandro/lineage-ui/assets/17580038/6ceb1731-471f-4279-a9bd-0294273054a3) 
 
 ## Fields
 
