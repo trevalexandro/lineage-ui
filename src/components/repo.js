@@ -73,7 +73,8 @@ const Repo = ({repoData}) => {
         errorMessage, 
         setErrorMessage,
         opened,
-        handlers
+        handlers,
+        navigateToLineagePage
     ]);
 
     const setErrorState = (errorMessage) => {
